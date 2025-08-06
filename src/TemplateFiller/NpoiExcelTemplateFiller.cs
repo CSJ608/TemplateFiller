@@ -90,13 +90,30 @@ namespace TemplateFiller
             }
         }
 
+        private IRow CreateRowAndCopyStyle(ISheet sheet, int rowIndex, IRow templateRow)
+        {
+            var row = sheet.CreateRow(rowIndex);
+            // 复制样式
+            for (int col = templateRow.FirstCellNum; col < templateRow.LastCellNum; col++)
+            {
+                var srcCell = templateRow.GetCell(col);
+                if (srcCell != null)
+                {
+                    var newCell = row.CreateCell(col);
+                    newCell.CellStyle = srcCell.CellStyle;
+                }
+            }
+
+            return row;
+        }
+
         private void FillArrayData(ISheet sheet, int startRow, int column, List<IDataProvider> items, string propertyName)
         {
             var templateRow = sheet.GetRow(startRow);
             for (int i = 0; i < items.Count; i++)
             {
                 var rowIndex = startRow + i;
-                var currentRow = sheet.GetRow(rowIndex);
+                var currentRow = sheet.GetRow(rowIndex) ?? CreateRowAndCopyStyle(sheet, rowIndex, templateRow);
                 var currentCell = currentRow.GetCell(column);
 
                 if(currentCell == null)
@@ -107,17 +124,7 @@ namespace TemplateFiller
                 {
                     // 创建一行
                     sheet.ShiftRows(rowIndex, sheet.LastRowNum, 1);
-                    currentRow = sheet.CreateRow(rowIndex);
-                    // 复制样式
-                    for (int col = templateRow.FirstCellNum; col < templateRow.LastCellNum; col++)
-                    {
-                        var srcCell = templateRow.GetCell(col);
-                        if (srcCell != null)
-                        {
-                            var newCell = currentRow.CreateCell(col);
-                            newCell.CellStyle = srcCell.CellStyle;
-                        }
-                    }
+                    currentRow = CreateRowAndCopyStyle(sheet, rowIndex, templateRow);
                     currentCell = currentRow.GetCell(column);
                 }
 
