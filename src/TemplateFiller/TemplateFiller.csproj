@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFrameworks>netstandard2.1;</TargetFrameworks>
+	<Nullable>enable</Nullable>
+	<PackageProjectUrl>https://github.com/CSJ608/TemplateFiller</PackageProjectUrl>
+	<PackageReadmeFile></PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NPOI" Version="2.7.4" />
+  </ItemGroup>
+
+</Project>
