@@ -13,6 +13,7 @@ namespace TemplateFiller
 {
     public class NpoiExcelTemplateFiller
     {
+        public static bool CreateDirectoryIfNotExists { get; set; } = true;
         public void FillTemplate(string templatePath, string outputPath, object dataSource)
         {
             using (var provider = new DefaultDataProvider(dataSource))
@@ -42,6 +43,15 @@ namespace TemplateFiller
 
         private void SaveWorkbook(IWorkbook workbook, string outputPath)
         {
+            if (CreateDirectoryIfNotExists)
+            {
+                var directory = Path.GetDirectoryName(outputPath);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+            }
+
             using (var stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write))
             {
                 workbook.Write(stream);
