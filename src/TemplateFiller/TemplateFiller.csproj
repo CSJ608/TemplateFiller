@@ -5,10 +5,13 @@
 	<Nullable>enable</Nullable>
 	<PackageProjectUrl>https://github.com/CSJ608/TemplateFiller</PackageProjectUrl>
 	<VersionPrefix>1.0.0</VersionPrefix>
-	<VersionSuffix>alpha.1</VersionSuffix>
+	<VersionSuffix>alpha.2</VersionSuffix>
 	<PackageReadmeFile>ReadMe.zh-Cn.md</PackageReadmeFile>
 	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<Authors>Marci</Authors>
+	<Description>一款基于NPOI的占位符填充工具，实现Word、Excel内占位符的替换</Description>
+	<RepositoryUrl>https://github.com/CSJ608/TemplateFiller</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
