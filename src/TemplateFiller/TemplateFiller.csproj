@@ -4,11 +4,18 @@
 	<TargetFrameworks>netstandard2.1;</TargetFrameworks>
 	<Nullable>enable</Nullable>
 	<PackageProjectUrl>https://github.com/CSJ608/TemplateFiller</PackageProjectUrl>
-	<PackageReadmeFile></PackageReadmeFile>
+	<VersionPrefix>1.0.0</VersionPrefix>
+	<VersionSuffix>alpha.1</VersionSuffix>
+	<PackageReadmeFile>ReadMe.zh-Cn.md</PackageReadmeFile>
+	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="NPOI" Version="2.7.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="ReadMe.zh-Cn.md" Pack="true" PackagePath="" />
+  </ItemGroup>
 </Project>
