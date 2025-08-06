@@ -52,7 +52,7 @@ public class Person
 ## Excel
 
 定义模板：
-![Excel Template Input](image.png)
+![Excel Template Input](https://github.com/CSJ608/TemplateFiller/blob/main/src/TemplateFiller/image.png?raw=true)
 
 ```csharp
 var filler = new NpoiExcelTemplateFiller();
@@ -76,4 +76,4 @@ filler.FillTemplate("Template.xlsx", "output.xlsx", data);
 ```
 
 填充后的效果：
-![Excel Template Output](image-1.png)
+![Excel Template Output](https://github.com/CSJ608/TemplateFiller/blob/main/src/TemplateFiller/image-1.png?raw=true)
