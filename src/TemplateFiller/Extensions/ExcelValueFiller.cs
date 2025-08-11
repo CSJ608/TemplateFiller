@@ -22,7 +22,7 @@ namespace TemplateFiller.Extensions
         /// <para>{PrintTime}</para>
         /// <para>{User:Name}</para>
         /// </remarks>
-        public const string Placeholder = @"\{.+?\}";
+        public const string Placeholder = @"\{(.+?)\}";
 
         private ICell? _cell { get; set; }
         

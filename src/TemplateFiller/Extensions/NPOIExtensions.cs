@@ -81,7 +81,7 @@ namespace TemplateFiller.Extensions
 
         public static void CopyStyle(this ICell cell, IRow templateRow)
         {
-            var srcCell = templateRow.GetCell(cell.RowIndex);
+            var srcCell = templateRow.GetCell(cell.ColumnIndex);
             cell.CellStyle = srcCell.CellStyle;
         }
 
