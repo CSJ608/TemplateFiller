@@ -1,13 +1,12 @@
-﻿using NPOI.SS.Formula.Functions;
-using NPOI.SS.UserModel;
+﻿using NPOI.SS.UserModel;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Text;
 using System.Text.RegularExpressions;
 using TemplateFiller.Abstractions;
+using TemplateFiller.Consts;
+using TemplateFiller.Extensions;
 
-namespace TemplateFiller.Extensions
+namespace TemplateFiller.Utils
 {
     /// <summary>
     /// 表示Excel数组填充器。
@@ -17,15 +16,6 @@ namespace TemplateFiller.Extensions
     /// </summary>
     public class ExcelArrayFiller : IFiller, IDisposable
     {
-        /// <summary>
-        /// 占位符
-        /// </summary>
-        /// <remarks>
-        /// <para>示例</para>
-        /// <para>[Users:Name]</para>
-        /// </remarks>
-        public const string Placeholder = @"^\[(.+?):(.+?)\]$";
-
         private ICell? _cell { get; set; }
 
         public ExcelArrayFiller(ICell? cell)
@@ -36,12 +26,12 @@ namespace TemplateFiller.Extensions
         /// <inheritdoc/>
         public bool Check()
         {
-            if(_cell == null)
+            if (_cell == null)
             {
                 return false;
             }
 
-            var match = Regex.Match(_cell.GetStringValue(), Placeholder);
+            var match = Regex.Match(_cell.GetStringValue(), PlaceholderConsts.ArrayPlaceholder);
             return match.Success;
         }
 
@@ -53,20 +43,26 @@ namespace TemplateFiller.Extensions
         /// <inheritdoc/>
         public void Fill(ISource source)
         {
-            if(_cell == null)
+            if (_cell == null)
             {
                 return;
             }
 
             var str = _cell.GetStringValue();
-            if(!Utils.IsMatch(str, Placeholder, out var patternOnly, out var matchCount))
+            if (!str.IsMatch(PlaceholderConsts.ArrayPlaceholder, out var patternOnly, out var matchCount))
             {
                 return;
             }
 
-            var arrayMatch = Regex.Match(str, Placeholder);
-            var arrayPath = arrayMatch.Groups[1].Value;
-            var propertyName = arrayMatch.Groups[2].Value;
+            var match = Regex.Match(str, PlaceholderConsts.ArrayPlaceholder); // 同一个单元格内有多个时，只匹配一个
+            
+            var arrayPath = match.Groups["collectionPath"].Value;
+            var fullMatch = match.Value;
+            string? propertyName = null;
+            if (match.Groups["propertyPath"].Success)
+            {
+                propertyName = match.Groups["propertyPath"].Value;
+            }
 
             // 获取数组数据
             var section = source.GetSection(arrayPath);
@@ -75,7 +71,7 @@ namespace TemplateFiller.Extensions
                 return;
             }
 
-            if(!(section.Value is IEnumerable enumerable))
+            if (!(section.Value is IEnumerable enumerable))
             {
                 return;
             }
@@ -88,10 +84,10 @@ namespace TemplateFiller.Extensions
             foreach (var item in enumerable)
             {
                 using var s = new Source(item);
-                var value = s[propertyName];
-                var replaceStr = Utils.ReplaceFirstMatch(str, Placeholder, value?.ToString() ?? string.Empty);
+                var value = propertyName == null ? item?.ToString() ?? string.Empty : s[propertyName];
+                var replaceStr = str.TryReplaceFirstMatch(PlaceholderConsts.ArrayPlaceholder, value?.ToString() ?? string.Empty);
                 var filledValue = patternOnly && matchCount == 1 ? value : replaceStr;
-                
+
                 var rowIndex = startRow + rowOffset;
                 var currentRow = sheet.GetRow(rowIndex) ?? sheet.CreateRowAndCopyStyle(rowIndex, templateRow);
                 var currentCell = currentRow.GetCell(column);
@@ -101,7 +97,7 @@ namespace TemplateFiller.Extensions
                     currentCell = currentRow.CreateCell(column);
                     currentCell.CopyStyle(templateRow);
                 }
-                else if(currentCell.IsMergedCell || (!string.IsNullOrEmpty(currentCell.StringCellValue) && rowOffset > 0))
+                else if (currentCell.IsMergedCell || !string.IsNullOrEmpty(currentCell.StringCellValue) && rowOffset > 0)
                 {
                     // 创建一行
                     sheet.ShiftRows(rowIndex, sheet.LastRowNum, 1);

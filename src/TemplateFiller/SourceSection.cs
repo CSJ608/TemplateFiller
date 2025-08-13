@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using TemplateFiller.Abstractions;
 
-namespace TemplateFiller.Extensions
+namespace TemplateFiller
 {
     public class SourceSection : ISourceSection, IDisposable
     {
-        private ISource? _source {  get; set; }
+        private ISource? _source { get; set; }
         private Source? _sectionSource { get; set; }
         private object? _value { get; set; }
         private readonly string _key;
@@ -27,7 +26,7 @@ namespace TemplateFiller.Extensions
             _path = path;
             _value = value;
 
-            if(value == null)
+            if (value == null)
             {
                 _sectionSource = null;
             }
@@ -49,7 +48,8 @@ namespace TemplateFiller.Extensions
         {
             _value = null;
             _source = null;
-            if (_sectionSource != null) {
+            if (_sectionSource != null)
+            {
                 _sectionSource.Dispose();
                 _sectionSource = null;
             }
@@ -57,7 +57,7 @@ namespace TemplateFiller.Extensions
 
         private object? GetValue(string key)
         {
-            if(_sectionSource == null)
+            if (_sectionSource == null)
             {
                 return null;
             }
@@ -67,7 +67,7 @@ namespace TemplateFiller.Extensions
 
         public IEnumerable<ISourceSection> GetChildren()
         {
-            if(_sectionSource == null)
+            if (_sectionSource == null)
             {
                 yield break;
             }

@@ -1,15 +1,11 @@
-﻿using NPOI.SS.Formula.Functions;
-using NPOI.SS.UserModel;
-using Org.BouncyCastle.Asn1.X509;
+﻿using NPOI.SS.UserModel;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace TemplateFiller.Extensions
 {
-    internal static class NPOIExtensions
+    public static class NPOIExtensions
     {
-        public static void SetExcelCellValueByType(this ICell cell, object? value)
+        public static void SetExcelCellValueByType(this NPOI.SS.UserModel.ICell cell, object? value)
         {
             if (value == null)
             {
@@ -63,13 +59,13 @@ namespace TemplateFiller.Extensions
             return row;
         }
 
-        public static bool IsCellMerged(this ICell cell)
+        public static bool IsCellMerged(this NPOI.SS.UserModel.ICell cell)
         {
             var rowIndex = cell.RowIndex;
             var columnIndex = cell.ColumnIndex;
             foreach (var region in cell.Sheet.MergedRegions)
             {
-                if (rowIndex >= region.FirstRow && rowIndex <= region.LastRow 
+                if (rowIndex >= region.FirstRow && rowIndex <= region.LastRow
                     && columnIndex >= region.FirstColumn && columnIndex <= region.LastColumn)
                 {
                     return true;
@@ -79,13 +75,13 @@ namespace TemplateFiller.Extensions
             return false;
         }
 
-        public static void CopyStyle(this ICell cell, IRow templateRow)
+        public static void CopyStyle(this NPOI.SS.UserModel.ICell cell, IRow templateRow)
         {
             var srcCell = templateRow.GetCell(cell.ColumnIndex);
             cell.CellStyle = srcCell.CellStyle;
         }
 
-        public static string GetStringValue(this ICell cell)
+        public static string GetStringValue(this NPOI.SS.UserModel.ICell cell)
         {
             var oldType = cell.CellType;
             cell.SetCellType(CellType.String);

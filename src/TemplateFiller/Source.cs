@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
 using TemplateFiller.Abstractions;
 
-namespace TemplateFiller.Extensions
+namespace TemplateFiller
 {
     public class Source : ISource, IDisposable
     {
@@ -23,17 +21,17 @@ namespace TemplateFiller.Extensions
         /// <inheritdoc/>
         public IEnumerable<ISourceSection> GetChildren()
         {
-            if(_source == null)
+            if (_source == null)
             {
                 yield break;
             }
 
-            if(_source is IDictionary dictionary)
+            if (_source is IDictionary dictionary)
             {
                 foreach (var childKey in dictionary.Keys)
                 {
-                    var key = childKey.ToString() ??  string.Empty;
-                    if(TryGetNestedValue(_source, key, out var value, out _))
+                    var key = childKey.ToString() ?? string.Empty;
+                    if (TryGetNestedValue(_source, key, out var value, out _))
                     {
                         yield return CreateSection(key, key, value);
                     }
@@ -43,7 +41,7 @@ namespace TemplateFiller.Extensions
             }
 
             var props = _source.GetType().GetProperties();
-            foreach (var prop in props) 
+            foreach (var prop in props)
             {
                 yield return CreateSection(prop.Name, prop.Name, prop.GetValue(_source));
             }
@@ -52,7 +50,7 @@ namespace TemplateFiller.Extensions
         /// <inheritdoc/>
         public ISourceSection GetSection(string key)
         {
-            if(TryGetNestedValue(_source, key, out var value, out var sectionKey))
+            if (TryGetNestedValue(_source, key, out var value, out var sectionKey))
             {
                 return CreateSection(sectionKey, key, value);
             }
@@ -80,9 +78,9 @@ namespace TemplateFiller.Extensions
             var pathParts = path.Split(':');
             var current = source;
 
-            for (var i = 0; i < pathParts.Length; i++) 
+            for (var i = 0; i < pathParts.Length; i++)
             {
-                if(current == null)
+                if (current == null)
                 {
                     return false;
                 }
@@ -114,7 +112,7 @@ namespace TemplateFiller.Extensions
 
         private object? GetNestedValue(string path)
         {
-            if(TryGetNestedValue(_source, path, out var value, out _))
+            if (TryGetNestedValue(_source, path, out var value, out _))
             {
                 return value;
             }
@@ -138,13 +136,13 @@ namespace TemplateFiller.Extensions
         public void Dispose()
         {
             _source = null;
-            while(_stack.Count > 0)
+            while (_stack.Count > 0)
             {
                 var section = _stack.Pop();
                 section.Dispose();
             }
         }
 
-        
+
     }
 }

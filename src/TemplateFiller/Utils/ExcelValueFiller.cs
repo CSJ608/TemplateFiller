@@ -1,11 +1,11 @@
 ﻿using NPOI.SS.UserModel;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Text.RegularExpressions;
 using TemplateFiller.Abstractions;
+using TemplateFiller.Consts;
+using TemplateFiller.Extensions;
 
-namespace TemplateFiller.Extensions
+namespace TemplateFiller.Utils
 {
     /// <summary>
     /// 表示Excel数据填充器。
@@ -14,19 +14,9 @@ namespace TemplateFiller.Extensions
     /// </summary>
     public sealed class ExcelValueFiller : IFiller, IDisposable
     {
-        /// <summary>
-        /// 占位符
-        /// </summary>
-        /// <remarks>
-        /// <para>示例</para>
-        /// <para>{PrintTime}</para>
-        /// <para>{User:Name}</para>
-        /// </remarks>
-        public const string Placeholder = @"\{(.+?)\}";
-
         private ICell? _cell { get; set; }
-        
-        public ExcelValueFiller(ICell? target) 
+
+        public ExcelValueFiller(ICell? target)
         {
             _cell = target;
         }
@@ -43,31 +33,31 @@ namespace TemplateFiller.Extensions
         /// <inheritdoc/>
         public bool Check()
         {
-            if(_cell == null)
+            if (_cell == null)
             {
                 return false;
             }
 
-            return Regex.IsMatch(_cell.GetStringValue(), Placeholder);
+            return Regex.IsMatch(_cell.GetStringValue(), PlaceholderConsts.ValuePlaceholder);
         }
 
         /// <inheritdoc/>
         public void Fill(ISource source)
         {
-            if(_cell == null)
+            if (_cell == null)
             {
                 return;
             }
 
             var str = _cell.GetStringValue();
 
-            if (!Utils.IsMatch(str, Placeholder, out var patternOnly, out var matchCount))
+            if (!str.IsMatch(PlaceholderConsts.ValuePlaceholder, out var patternOnly, out var matchCount))
             {
                 return;
             }
 
             object? value = null;
-            var replaceStr = Regex.Replace(str, Placeholder, match =>
+            var replaceStr = Regex.Replace(str, PlaceholderConsts.ValuePlaceholder, match =>
             {
                 var key = match.Groups[1].Value;
                 value = source[key];

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TemplateFiller.Abstractions
+﻿namespace TemplateFiller.Abstractions
 {
     /// <summary>
     /// 表示一个数据填充器

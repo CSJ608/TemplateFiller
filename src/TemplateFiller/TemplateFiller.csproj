@@ -12,6 +12,7 @@
 	<Authors>Marci</Authors>
 	<Description>一款基于NPOI的占位符填充工具，实现Word、Excel内占位符的替换</Description>
 	<RepositoryUrl>https://github.com/CSJ608/TemplateFiller</RepositoryUrl>
+	<LangVersion>12.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,15 +1,9 @@
 ﻿using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using TemplateFiller.Abstractions;
-using TemplateFiller.Extensions;
+using TemplateFiller.Utils;
 
 namespace TemplateFiller
 {
