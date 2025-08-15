@@ -10,11 +10,15 @@ namespace TemplateFiller.Utils
 {
     /// <summary>
     /// 表示Excel数组填充器。
-    /// <para>可以识别表格内是否有占位符[array:property]</para>
-    /// <para>可以从数据源<seealso cref="ISource"/>中获取source[array]，然后尝试遍历其中每个元素item，依次获取item[property]的值， 然后替换占位符。
-    /// 每替换一次，活动单元格就向下移动一次。在向下移动的过程中，若发现合并的单元格，或者未合并但有数据的单元格，则插入一行，再填写数据</para>
+    /// <para>可以识别表格内是否有占位符[array]或者[array.property]</para>
+    /// <para>可以从数据源<seealso cref="ISource"/>中获取source[array]，然后一边遍历source[array]，一边填充目标单元格。填充一次完成后，
+    /// 就将目标向下移动一格。若发现合并的单元格，或者未合并但有数据的单元格，则会插入一行。</para>
+    /// <para>取值时，若占位符是[array]，则把遍历时的单个元素item直接写入单元格；若占位符是[array.property]，则取item[property]的值写入单元格。</para>
     /// </summary>
-    public class ExcelArrayFiller : IFiller, IDisposable
+    /// <remarks>
+    /// 占位符参见：<seealso cref="PlaceholderConsts.ArrayPlaceholder"/>
+    /// </remarks>
+    public class ExcelArrayFiller : ITargetFiller, IDisposable
     {
         private ICell? _cell { get; set; }
 
@@ -33,11 +37,6 @@ namespace TemplateFiller.Utils
 
             var match = Regex.Match(_cell.GetStringValue(), PlaceholderConsts.ArrayPlaceholder);
             return match.Success;
-        }
-
-        public void Dispose()
-        {
-            _cell = null;
         }
 
         /// <inheritdoc/>
@@ -121,6 +120,11 @@ namespace TemplateFiller.Utils
         public void ChangeTarget(ICell? cell)
         {
             _cell = cell;
+        }
+
+        public void Dispose()
+        {
+            _cell = null;
         }
     }
 }

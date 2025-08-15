@@ -53,6 +53,7 @@ namespace TemplateFiller
 
         private static void ProcessTables(ISource source, WordValueFiller filler, IList<XWPFTable> tables)
         {
+            using var arrayfiller = new WordArrayFiller(null);
             foreach (var table in tables)
             {
                 foreach (var row in table.Rows)
@@ -62,6 +63,13 @@ namespace TemplateFiller
                         ProcessParagraph(source, filler, cell.Paragraphs);
                     }
                 }
+
+                arrayfiller.ChangeTarget(table);
+                if (!arrayfiller.Check())
+                {
+                    continue;
+                }
+                arrayfiller.Fill(source);
             }
         }
 

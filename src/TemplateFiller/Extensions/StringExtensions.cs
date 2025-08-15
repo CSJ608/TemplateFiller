@@ -1,7 +1,10 @@
-﻿using System;
+﻿using NPOI.WP.UserModel;
+using NPOI.XWPF.UserModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using TemplateFiller.Abstractions;
 
 namespace TemplateFiller.Extensions
 {
@@ -53,87 +56,45 @@ namespace TemplateFiller.Extensions
         }
 
         /// <summary>
-        /// 用于解决字符串与模式<paramref name="pattern"/>匹配的部分，被拆分成多个子串时，如何确定哪些子串包含了匹配的字符，以及这些字符的位置
+        /// 从字符串中移除指定位置开始的指定长度字符
         /// </summary>
-        /// <param name="substrings">被拆分的子串</param>
-        /// <param name="pattern">有且只有一个分组的模式，比如@"\{(.+?)\}"</param>
-        /// <returns>反应匹配情况的字典，键是模式中的分组值，值是数组，反应了匹配的子串索引和子串内的位置和长度</returns>
-        /// 
-        /// <remarks>
-        /// <example>
-        /// <code>
-        /// var srcString = "起始时间{StartTime} 终止时间{EndTime}";
-        /// var subStrings = { "起始时间", "{", "StartTime", "}", " 终止时间", "{", "EndTime", "}" };
-        /// var pattern = @"\{(.+?)\}";
-        /// var result = subStrings.FindMatchingSubstrings(pattern); // StartTime: 1, 0, 1
-        ///                                                          //            2. 0. 9 
-        ///                                                          //            3. 0. 1
-        ///                                                          // EndTime:   5, 0, 1
-        ///                                                          //            6. 0. 7 
-        ///                                                          //            7. 0. 1
-        /// </code>
-        /// </example>
-        /// </remarks>
-
-        public static Dictionary<string, List<(int SubstringIndex, int StartIndex, int Length)>> FindMatchingSubstrings(
-            this string[] substrings, string pattern)
+        /// <param name="str">原始字符串</param>
+        /// <param name="startIndex">开始移除的位置(从0开始)</param>
+        /// <param name="length">要移除的长度</param>
+        /// <returns>处理后的新字符串</returns>
+        public static string RemoveAt(this string str, int startIndex, int length)
         {
-            // 合并所有子串以重建原始字符串
-            var fullString = string.Concat(substrings);
+            if (string.IsNullOrEmpty(str))
+                return str;
 
-            // 使用正则表达式找到所有匹配的部分
-            var matches = Regex.Matches(fullString, pattern);
-            if (matches.Count == 0)
-                return [];
+            if (startIndex < 0 || startIndex >= str.Length)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "起始位置超出字符串范围");
 
-            var result = new Dictionary<string, List<(int, int, int)>>();
-            int currentPos = 0; // 当前在合并字符串中的位置
-            int substringIndex = 0; // 当前处理的子串索引
+            if (length < 0 || startIndex + length > str.Length)
+                throw new ArgumentOutOfRangeException(nameof(length), "要移除的长度超出字符串范围");
 
-            foreach (Match match in matches)
-            {
-                string matchedContent = match.Groups[1].Value; // 获取匹配的内容
-                int matchStart = match.Index;
-                int matchEnd = match.Index + match.Length;
+            return str.Substring(0, startIndex) + str.Substring(startIndex + length);
+        }
 
-                var positions = new List<(int, int, int)>();
+        /// <summary>
+        /// 在字符串的指定位置插入另一个字符串
+        /// </summary>
+        /// <param name="str">原始字符串</param>
+        /// <param name="startIndex">插入位置(从0开始)</param>
+        /// <param name="value">要插入的字符串</param>
+        /// <returns>处理后的新字符串</returns>
+        public static string InsertAt(this string str, int startIndex, string value)
+        {
+            if (string.IsNullOrEmpty(str))
+                return value ?? string.Empty;
 
-                // 遍历子串，直到覆盖当前匹配项
-                while (substringIndex < substrings.Length && currentPos < matchEnd)
-                {
-                    string sub = substrings[substringIndex];
-                    int subLength = sub.Length;
-                    int subStart = currentPos;
-                    int subEnd = currentPos + subLength;
+            if (startIndex < 0 || startIndex > str.Length)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "插入位置超出字符串范围");
 
-                    // 检查当前子串是否与匹配项有重叠
-                    if (subEnd > matchStart && subStart < matchEnd)
-                    {
-                        // 计算重叠部分的起始和结束
-                        int overlapStart = Math.Max(matchStart, subStart);
-                        int overlapEnd = Math.Min(matchEnd, subEnd);
-                        int overlapLength = overlapEnd - overlapStart;
+            if (value == null)
+                return str;
 
-                        if (overlapLength > 0)
-                        {
-                            // 计算在子串中的起始位置
-                            int startInSub = overlapStart - subStart;
-                            positions.Add((substringIndex, startInSub, overlapLength));
-                        }
-                    }
-
-                    currentPos = subEnd;
-                    substringIndex++;
-                }
-
-                // 确保下一个匹配项从正确的子串开始
-                substringIndex--;
-                currentPos -= substrings[substringIndex].Length;
-
-                result[matchedContent] = positions;
-            }
-
-            return result;
+            return str.Substring(0, startIndex) + value + str.Substring(startIndex);
         }
     }
 }

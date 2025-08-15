@@ -1,12 +1,12 @@
 ﻿namespace TemplateFiller.Abstractions
 {
     /// <summary>
-    /// 表示一个数据填充器
+    /// 表示一个目标填充器
     /// </summary>
-    public interface IFiller
+    public interface ITargetFiller
     {
         /// <summary>
-        /// 从<paramref name="source"/>中读取与占位符路径匹配的数据，并填充到目标
+        /// 从<paramref name="source"/>中读取与占位符路径匹配的数据，并填充到目标位置
         /// </summary>
         /// <param name="source"></param>
         public void Fill(ISource source);

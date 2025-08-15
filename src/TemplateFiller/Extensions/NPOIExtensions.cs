@@ -1,5 +1,10 @@
-﻿using NPOI.SS.UserModel;
+﻿using NPOI.OpenXmlFormats.Wordprocessing;
+using NPOI.SS.UserModel;
+using NPOI.XWPF.UserModel;
 using System;
+using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace TemplateFiller.Extensions
 {
@@ -88,6 +93,43 @@ namespace TemplateFiller.Extensions
             var str = cell.StringCellValue;
             cell.SetCellType(oldType);
             return str;
+        }
+
+        public static XWPFTableRow CreateRowAndCopyStyle(this XWPFTable table, int rowIndex, XWPFTableRow templateRow)
+        {
+            var row = templateRow.CloneRow(rowIndex);
+            foreach (var cell in row.GetTableCells())
+            {
+                while (cell.Paragraphs.Count > 0) {
+                    cell.RemoveParagraph(0);
+                }
+
+                // 拷贝了表格时，暂无法处理
+            }            
+
+            return row;
+        }
+
+        public static bool IsCellMerged(this XWPFTableCell cell)
+        {
+            if (cell == null) return false;
+
+            var tcPr = cell.GetCTTc().tcPr;
+            if (tcPr == null) return false;
+
+            // 检查横向合并
+            if (tcPr.gridSpan != null && int.Parse(tcPr.gridSpan.val) > 1)
+                return true;
+
+            // 检查水平合并
+            if (tcPr.hMerge != null && (tcPr.hMerge.val == ST_Merge.restart || tcPr.hMerge.val == ST_Merge.@continue))
+                return true;
+
+            // 检查垂直合并
+            if (tcPr.vMerge != null && (tcPr.vMerge.val == ST_Merge.restart || tcPr.vMerge.val == ST_Merge.@continue))
+                return true;
+
+            return false;
         }
     }
 }

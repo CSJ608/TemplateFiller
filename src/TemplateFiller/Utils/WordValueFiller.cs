@@ -14,20 +14,14 @@ namespace TemplateFiller.Utils
     /// <para>可以识别段落内是否有占位符{path}</para>
     /// <para>可以从数据源<seealso cref="ISource"/>中获取source[path]，然后替换占位符</para>
     /// </summary>
-    public sealed class WordValueFiller : IFiller, IDisposable
+    /// <remarks>
+    /// 占位符参见：<seealso cref="PlaceholderConsts.ValuePlaceholder"/>
+    /// </remarks>
+    public sealed class WordValueFiller : ITargetFiller, IDisposable
     {
         private XWPFParagraph? _paragraph { get; set; }
 
         public WordValueFiller(XWPFParagraph? paragraph)
-        {
-            _paragraph = paragraph;
-        }
-
-        /// <summary>
-        /// 更换目标
-        /// </summary>
-        /// <param name="paragraph"></param>
-        public void ChangeTarget(XWPFParagraph? paragraph)
         {
             _paragraph = paragraph;
         }
@@ -61,7 +55,7 @@ namespace TemplateFiller.Utils
                 var replaceStr = BuildReplaceText(source, _paragraph.Text);
                 while (_paragraph.Runs.Count > 1)
                 {
-                    _paragraph.Runs.RemoveAt(1);
+                    _paragraph.RemoveRun(1);
                 }
                 _paragraph.Runs[0].SetText(replaceStr);
                 return;
@@ -76,103 +70,36 @@ namespace TemplateFiller.Utils
             // 倒序处理。否则插入、删除run会造成后续run的索引被改变
             foreach (var match in matches.Reverse())
             {
-                var key = match.Key;
+                var runMatch = match.Key;
+                var key = runMatch.Groups[1].Value;
                 var subStrings = match.Value;
+                var replaceStr = source[key]?.ToString() ?? string.Empty;
                 switch (subStrings.Count)
                 {
                     case 1:
-                        RemoveMatchedTextInHeadRun(subStrings);
-                        AddReplaceValueToHeadRun(source, key, subStrings);
+                        subStrings.RemoveMatchedTextInHeadRun(_paragraph);
+                        subStrings.AddReplaceValueToHeadRun(_paragraph, replaceStr);
                         break;
                     case 2:
                         // 模式被分割在两个run中，那么移除头部和尾部与模式匹配的文本。然后在头部末尾添加
-                        RemoveMatchedTextInHeadRun(subStrings);
-                        RemoveMatchedTextInTailRun(subStrings);
-                        AddReplaceValueToHeadRun(source, key, subStrings);
-                        RemoveTailRunIfTextIsEmptyOrNull(subStrings);
+                        subStrings.RemoveMatchedTextInHeadRun(_paragraph);
+                        subStrings.RemoveMatchedTextInTailRun(_paragraph);
+                        subStrings.AddReplaceValueToHeadRun(_paragraph, replaceStr);
+                        subStrings.RemoveTailRunIfTextIsEmptyOrNull(_paragraph);
                         break;
                     case >= 3:
                         // 模式被分割在多个run中，那么移除头部、尾部与模式匹配的文本，移除头尾之间的所有run。然后在头部末尾添加
-                        RemoveMatchedTextInHeadRun(subStrings);
-                        RemoveMatchedTextInTailRun(subStrings);
-                        RemoveRunsBetweenHeadAndTail(subStrings);
-                        AddReplaceValueToHeadRun(source, key, subStrings);
-                        RemoveTailRunIfTextIsEmptyOrNull(subStrings);
+                        subStrings.RemoveMatchedTextInHeadRun(_paragraph);
+                        subStrings.RemoveMatchedTextInTailRun(_paragraph);
+                        subStrings.RemoveRunsBetweenHeadAndTail(_paragraph);
+                        subStrings.AddReplaceValueToHeadRun(_paragraph, replaceStr);
+                        subStrings.RemoveTailRunIfTextIsEmptyOrNull(_paragraph);
                         break;
                     default:
                         break;
                 }
             }
-        }
-
-        private void RemoveTailRunIfTextIsEmptyOrNull(List<(int SubstringIndex, int StartIndex, int Length)> subStrings)
-        {
-            if (_paragraph == null)
-            {
-                throw new ArgumentNullException(nameof(_paragraph));
-            }
-
-            var headerIndex = subStrings.First().SubstringIndex;
-            var tailIndex = headerIndex + 1;
-            if (string.IsNullOrEmpty(_paragraph.Runs[tailIndex].Text))
-            {
-                _paragraph.RemoveRun(tailIndex);
-            }
-        }
-
-        private void RemoveRunsBetweenHeadAndTail(List<(int SubstringIndex, int StartIndex, int Length)> subStrings)
-        {
-            if (_paragraph == null)
-            {
-                throw new ArgumentNullException(nameof(_paragraph));
-            }
-
-            var tailInfo = subStrings.Last();
-            var headInfo = subStrings.First();
-            for (int i = tailInfo.SubstringIndex - 1; i > headInfo.SubstringIndex; i--)
-            {
-                _paragraph.RemoveRun(i);
-            }
-        }
-
-        private void AddReplaceValueToHeadRun(ISource source, string key, List<(int SubstringIndex, int StartIndex, int Length)> subStrings)
-        {
-            if (_paragraph == null)
-            {
-                throw new ArgumentNullException(nameof(_paragraph));
-            }
-
-            var value = source[key]?.ToString() ?? string.Empty;
-            var headInfo = subStrings.First();
-            var headRun = _paragraph.Runs[headInfo.SubstringIndex];
-            headRun.SetText(headRun.Text + value);
-        }
-
-        private void RemoveMatchedTextInHeadRun(List<(int SubstringIndex, int StartIndex, int Length)> subStrings)
-        {
-            if (_paragraph == null)
-            {
-                throw new ArgumentNullException(nameof(_paragraph));
-            }
-
-            var headInfo = subStrings.First();
-            var headRun = _paragraph.Runs[headInfo.SubstringIndex];
-            var textLengthWithoutPlaceholder = headRun.Text.Length - headInfo.Length;
-            headRun.SetText(headRun.Text.Substring(0, textLengthWithoutPlaceholder));
-        }
-
-        private void RemoveMatchedTextInTailRun(List<(int SubstringIndex, int StartIndex, int Length)> subStrings)
-        {
-            if (_paragraph == null)
-            {
-                throw new ArgumentNullException(nameof(_paragraph));
-            }
-
-            var tailInfo = subStrings.Last();
-            var tailRun = _paragraph.Runs[tailInfo.SubstringIndex];
-            var textLengthWithoutPlaceholder = tailRun.Text.Length - tailInfo.Length;
-            tailRun.SetText(tailRun.Text.Substring(tailInfo.Length, textLengthWithoutPlaceholder));
-        }
+        }        
 
         private static string BuildReplaceText(ISource source, string originalText)
         {
@@ -181,6 +108,15 @@ namespace TemplateFiller.Utils
                 var key = match.Groups[1].Value;
                 return source[key]?.ToString() ?? string.Empty;
             });
+        }
+
+        /// <summary>
+        /// 更换目标
+        /// </summary>
+        /// <param name="paragraph"></param>
+        public void ChangeTarget(XWPFParagraph? paragraph)
+        {
+            _paragraph = paragraph;
         }
 
         public void Dispose()
