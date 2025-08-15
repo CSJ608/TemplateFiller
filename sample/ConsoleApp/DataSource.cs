@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ConsoleApp
+﻿namespace ConsoleApp
 {
     public class DataSource
     {
@@ -12,14 +6,20 @@ namespace ConsoleApp
         public string EndTime { get; set; } = string.Empty;
         public string PrintTime { get; set; } = string.Empty;
         public Person[] Persons { get; set; } = [];
+        public int[] Counts { get; set; } = [];
     }
 
     public class Person
     {
+        public PersonInfo Info { get; set; } = new PersonInfo();
+        public string WorkNo { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+
+    public class PersonInfo
+    {
         public string Name { get; set; } = string.Empty;
         public int Age { get; set; }
         public string Sex { get; set; } = string.Empty;
-        public string WorkNo { get; set; } = string.Empty;
-        public string Description {  get; set; } = string.Empty;
     }
 }

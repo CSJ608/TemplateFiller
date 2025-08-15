@@ -1,12 +1,12 @@
-﻿# 什么是模板填充
-该工具的主要功能是在模板中查找占位符，根据占位符的路径，从数据源读取数据，并替换占位符。
+﻿# 什么是模板填充器
+模板填充器的功能是在模板中查找占位符，识别占位符的类别，然后根据占位符的路径，从数据源读取数据，并替换占位符。
 
-## 模板支持情况
+## 模板支持
 
 - [x] Excel (.xls, .xlsx)
-- [ ] Word (.doc, .docx)
+- [x] Word (.docx)
 
-## 可填充的数据
+## 填充的数据
 
 - [x] 文本
 - [x] 表格
@@ -14,16 +14,49 @@
 
 ## 占位符说明
 
-### 直接替换的文本
-用 <kbd>{</kbd>Path<kbd>}</kbd> 标识。例如：
+### 简单值占位符
+使用":"分隔不同层级。在替换占位符时，仅使用匹配的值替换占位符。
 
-- {StartTime}：将数据源中路径为"StartTime"的数据填充至占位符处
-- {Person:Name}：将数据源中路径为"Person:Name"的数据填充至占位符处
+#### 示例
 
-### 填充表格
-用 <kbd>[</kbd>Path<kbd>]</kbd> 标识。例如：
+```csharp
+// 在占位符处填充一个值，值来源为 Source.Name
+var p1 = "{Name}";
 
-- [Persons:Name]：遍历数据源中路径为"Persons"的集合，并尝试获取每个元素的"Name"属性的值，然后从占位符所处位置开始，向下依次填充属性值。如果向下填充的过程中发现任意文本，则插入新的一行，避免覆盖已有文本。
+// 在占位符处填充一个值，值来源为 Source.Customer.Name
+var p2 = "{Customer:Name}";
+
+// 在占位符处填充一个值，值来源为 Source.Project.Customer.Name
+var p3 = "{Project:Customer:Name}";
+```
+
+### 数组占位符
+使用":"分隔不同层级，并且允许使用一次"."，声明可枚举集合每个元素应取哪个字段
+
+#### 示例
+```csharp
+// 在占位符及其下方，填充多个值，值来源为 Source.Names
+var p1 = "[Names]";
+
+// 在占位符及其下方，填充多个值，值来源为 Source.Student.Names
+var p2 = "[Student:Names]";
+
+// 在占位符及其下方，填充多个值，值来源为 Source.Students.Select(item => item.Name)
+var p3 = "[Students.Name]";
+
+// 在占位符及其下方，填充多个值，值来源为 Source.Students.Select(item => item.Info.Name)
+var p4 = "[Students.Info:Name]";
+
+// 在占位符及其下方，填充多个值，值来源为 Source.Project.Students.Select(item => item.Name)
+var p5 = "[Project:Students.Name]";
+
+// 在占位符及其下方，填充多个值，值来源为 Source.Project.Students.Select(item => item.Info.Name)
+var p6 = "[Project:Students.Info:Name]";
+```
+
+#### 补充说明
+
+在占位符及其下方填充多个值的过程中，若发现待填充的行存在合并单元格或者任意文本，则会插入一行，避免修改原本的数据。
 
 # 开始使用
 
