@@ -18,14 +18,9 @@ namespace TemplateFiller.Utils
     /// <remarks>
     /// 占位符参见：<seealso cref="PlaceholderConsts.ArrayPlaceholder"/>
     /// </remarks>
-    public class ExcelArrayFiller : ITargetFiller, IDisposable
+    public sealed class ExcelArrayFiller(ICell? cell) : ITargetFiller, IDisposable
     {
-        private ICell? _cell { get; set; }
-
-        public ExcelArrayFiller(ICell? cell)
-        {
-            _cell = cell;
-        }
+        private ICell? _cell { get; set; } = cell;
 
         /// <inheritdoc/>
         public bool Check()
@@ -54,7 +49,7 @@ namespace TemplateFiller.Utils
             }
 
             var match = Regex.Match(str, PlaceholderConsts.ArrayPlaceholder); // 同一个单元格内有多个时，只匹配一个
-            
+
             var arrayPath = match.Groups["collectionPath"].Value;
             var fullMatch = match.Value;
             string? propertyName = null;
@@ -122,6 +117,7 @@ namespace TemplateFiller.Utils
             _cell = cell;
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             _cell = null;

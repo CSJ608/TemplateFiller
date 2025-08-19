@@ -2,11 +2,8 @@
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
-using NPOI.XWPF.UserModel;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TemplateFiller.Abstractions;
@@ -19,7 +16,7 @@ namespace TemplateFiller
         private sealed class ExcelFiller : Filler
         {
             internal ExcelFiller() : base(TemplateType.Excel)
-            { 
+            {
             }
 
             public override void FillTemplate(Stream template, Stream output, object dataSource)

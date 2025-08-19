@@ -5,10 +5,12 @@ using TemplateFiller.Abstractions;
 
 namespace TemplateFiller
 {
+    /// <inheritdoc/>
     public class Source(object? source) : ISource, IDisposable
     {
         private readonly Stack<SourceSection> _stack = new();
 
+        /// <inheritdoc/>
         public object? this[string key] => GetNestedValue(key);
 
         /// <inheritdoc/>
@@ -126,6 +128,7 @@ namespace TemplateFiller
             return section;
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             source = null;

@@ -1,14 +1,10 @@
-﻿using NPOI.WP.UserModel;
-using NPOI.XWPF.UserModel;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Text.RegularExpressions;
-using TemplateFiller.Abstractions;
 
 namespace TemplateFiller.Extensions
 {
-    public static class StringExtensions
+    internal static class StringExtensions
     {
         /// <summary>
         /// 尝试替换<paramref name="target"/>中，第一个被<paramref name="pattern"/>匹配的字符串为<paramref name="replacement"/>

@@ -2,12 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace TemplateFiller.Extensions
 {
-    public static class XWPFExtensions
+    internal static class XWPFExtensions
     {
         /// <summary>
         /// 用于解决字符串与模式<paramref name="pattern"/>匹配的部分，被拆分成多个子串时，如何确定哪些子串包含了匹配的字符，以及这些字符的位置
@@ -130,8 +129,8 @@ namespace TemplateFiller.Extensions
             }
 
             var headInfo = subStrings.First();
-            var headRun = paragraph.Runs[headInfo.SubstringIndex];            
-            var newText = headRun.Text.RemoveAt(headInfo.StartIndex, headInfo.Length);            
+            var headRun = paragraph.Runs[headInfo.SubstringIndex];
+            var newText = headRun.Text.RemoveAt(headInfo.StartIndex, headInfo.Length);
             headRun.SetText(newText);
         }
 

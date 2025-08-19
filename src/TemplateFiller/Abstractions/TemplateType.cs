@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TemplateFiller.Abstractions
+﻿namespace TemplateFiller.Abstractions
 {
+    /// <summary>
+    /// 模板类型
+    /// </summary>
     public enum TemplateType
     {
         /// <summary>

@@ -1,12 +1,9 @@
-﻿using NPOI.Util;
-using NPOI.WP.UserModel;
-using NPOI.XWPF.UserModel;
+﻿using NPOI.XWPF.UserModel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Xml;
 using TemplateFiller.Abstractions;
 using TemplateFiller.Consts;
 using TemplateFiller.Extensions;
@@ -23,26 +20,21 @@ namespace TemplateFiller.Utils
     /// <remarks>
     /// 占位符参见：<seealso cref="PlaceholderConsts.ArrayPlaceholder"/>
     /// </remarks>
-    public class WordArrayFiller : ITargetFiller, IDisposable
+    public sealed class WordArrayFiller(XWPFTable? table) : ITargetFiller, IDisposable
     {
-        private XWPFTable? _table {  get; set; }
-        private Dictionary<int, (IEnumerator enumerator, string? propertyName)?> ReplaceSource {  get; set; }
-
-        public WordArrayFiller(XWPFTable? table)
-        {
-            _table = table;
-            ReplaceSource = [];
-        }
+        private XWPFTable? _table { get; set; } = table;
+        private Dictionary<int, (IEnumerator enumerator, string? propertyName)?> ReplaceSource { get; set; } = [];
 
         /// <inheritdoc/>
         public bool Check()
         {
-            if(_table == null)
+            if (_table == null)
             {
                 return false;
             }
 
-            foreach (var row in _table.Rows) {
+            foreach (var row in _table.Rows)
+            {
                 foreach (var cell in row.GetTableCells())
                 {
                     var str = cell.GetText();
@@ -53,13 +45,14 @@ namespace TemplateFiller.Utils
                     }
                 }
             }
-            
+
             return false;
         }
 
+        /// <inheritdoc/>
         public void Fill(ISource source)
         {
-            if(_table == null)
+            if (_table == null)
             {
                 return;
             }
@@ -81,7 +74,7 @@ namespace TemplateFiller.Utils
 
                 // 当前行内至少有一列存在占位符。
                 // 填充当前行的所有占位符
-                var rowOffset = 1; 
+                var rowOffset = 1;
                 var templateRow = _table.Rows[startRowIndex];
                 foreach (var allReplaceValues in GetRowReplaceValues())
                 {
@@ -92,7 +85,7 @@ namespace TemplateFiller.Utils
 
                     var targetRowIndex = startRowIndex + rowOffset;
                     var targetRow = _table.GetRow(targetRowIndex);
-                    if(targetRow == null)
+                    if (targetRow == null)
                     {
                         targetRow = templateRow.CloneRow(targetRowIndex);
                     }
@@ -195,7 +188,8 @@ namespace TemplateFiller.Utils
 
         private void AddReplaceSource(int columnIndex, IEnumerator enumerator, string? propertyName)
         {
-            if (!ReplaceSource.ContainsKey(columnIndex)) {
+            if (!ReplaceSource.ContainsKey(columnIndex))
+            {
                 ReplaceSource.Add(columnIndex, (enumerator, propertyName));
             }
         }
@@ -204,7 +198,7 @@ namespace TemplateFiller.Utils
         {
             var columnIndexs = ReplaceSource.Keys;
             var emptyIndexs = new List<int>();
-            while( emptyIndexs.Count < columnIndexs.Count)
+            while (emptyIndexs.Count < columnIndexs.Count)
             {
                 var result = new List<(int columnIndex, string replaceStr)>();
                 foreach (var columnIndex in columnIndexs)
@@ -216,7 +210,7 @@ namespace TemplateFiller.Utils
                         var enumerator = source.Value.enumerator;
                         if (enumerator.MoveNext())
                         {
-                            if(source.Value.propertyName == null)
+                            if (source.Value.propertyName == null)
                             {
                                 replaceStr = enumerator.Current?.ToString() ?? string.Empty;
                             }
@@ -236,12 +230,13 @@ namespace TemplateFiller.Utils
                     result.Add((columnIndex, replaceStr));
                 }
 
-                if (emptyIndexs.Count < columnIndexs.Count) {
+                if (emptyIndexs.Count < columnIndexs.Count)
+                {
                     // 还存在枚举器没遍历完，
                     yield return result;
                 }
             }
-            
+
         }
 
         private void FillCurrentCell(XWPFTableCell currentCell, string replaceStr)
@@ -297,6 +292,7 @@ namespace TemplateFiller.Utils
             _table = table;
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             _table = null;

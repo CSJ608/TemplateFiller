@@ -4,6 +4,7 @@ using TemplateFiller.Abstractions;
 
 namespace TemplateFiller
 {
+    /// <inheritdoc/>
     public class SourceSection : ISourceSection, IDisposable
     {
         private ISource? _source { get; set; }
@@ -36,14 +37,19 @@ namespace TemplateFiller
             }
         }
 
+        /// <inheritdoc/>
         public object? this[string key] => GetValue(key);
 
+        /// <inheritdoc/>
         public string Key => _key;
 
+        /// <inheritdoc/>
         public string Path => _path;
 
+        /// <inheritdoc/>
         public object? Value => _value;
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             _value = null;
@@ -65,6 +71,7 @@ namespace TemplateFiller
             return _sectionSource[key];
         }
 
+        /// <inheritdoc/>
         public IEnumerable<ISourceSection> GetChildren()
         {
             if (_sectionSource == null)
@@ -78,6 +85,7 @@ namespace TemplateFiller
             }
         }
 
+        /// <inheritdoc/>
         public ISourceSection GetSection(string key)
         {
             if (_sectionSource == null)
@@ -88,6 +96,6 @@ namespace TemplateFiller
             return _sectionSource.GetSection(key);
         }
 
-        public static SourceSection Empty => new SourceSection(null, string.Empty, string.Empty, null);
+        internal static SourceSection Empty => new SourceSection(null, string.Empty, string.Empty, null);
     }
 }

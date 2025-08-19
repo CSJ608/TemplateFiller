@@ -1,5 +1,8 @@
 ﻿namespace TemplateFiller.Consts
 {
+    /// <summary>
+    /// 模板占位符
+    /// </summary>
     public static class PlaceholderConsts
     {
         /// <summary>

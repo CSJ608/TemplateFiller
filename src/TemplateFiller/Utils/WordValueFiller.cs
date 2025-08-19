@@ -1,6 +1,5 @@
 ﻿using NPOI.XWPF.UserModel;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using TemplateFiller.Abstractions;
@@ -17,14 +16,9 @@ namespace TemplateFiller.Utils
     /// <remarks>
     /// 占位符参见：<seealso cref="PlaceholderConsts.ValuePlaceholder"/>
     /// </remarks>
-    public sealed class WordValueFiller : ITargetFiller, IDisposable
+    public sealed class WordValueFiller(XWPFParagraph? paragraph) : ITargetFiller, IDisposable
     {
-        private XWPFParagraph? _paragraph { get; set; }
-
-        public WordValueFiller(XWPFParagraph? paragraph)
-        {
-            _paragraph = paragraph;
-        }
+        private XWPFParagraph? _paragraph { get; set; } = paragraph;
 
         /// <inheritdoc/>
         public bool Check()
@@ -37,6 +31,7 @@ namespace TemplateFiller.Utils
             return Regex.IsMatch(_paragraph.Text, PlaceholderConsts.ValuePlaceholder);
         }
 
+        /// <inheritdoc/>
         public void Fill(ISource source)
         {
             if (_paragraph == null)
@@ -99,7 +94,7 @@ namespace TemplateFiller.Utils
                         break;
                 }
             }
-        }        
+        }
 
         private static string BuildReplaceText(ISource source, string originalText)
         {
@@ -119,6 +114,7 @@ namespace TemplateFiller.Utils
             _paragraph = paragraph;
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             _paragraph = null;

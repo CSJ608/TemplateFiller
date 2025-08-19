@@ -15,14 +15,9 @@ namespace TemplateFiller.Utils
     /// <remarks>
     /// 占位符参见：<seealso cref="PlaceholderConsts.ValuePlaceholder"/>
     /// </remarks>
-    public sealed class ExcelValueFiller : ITargetFiller, IDisposable
+    public sealed class ExcelValueFiller(ICell? cell) : ITargetFiller, IDisposable
     {
-        private ICell? _cell { get; set; }
-
-        public ExcelValueFiller(ICell? target)
-        {
-            _cell = target;
-        }
+        private ICell? _cell { get; set; } = cell;
 
         /// <inheritdoc/>
         public bool Check()
@@ -71,6 +66,8 @@ namespace TemplateFiller.Utils
             _cell = cell;
         }
 
+
+        /// <inheritdoc/>
         public void Dispose()
         {
             _cell = null;

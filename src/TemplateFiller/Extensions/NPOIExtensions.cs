@@ -2,13 +2,10 @@
 using NPOI.SS.UserModel;
 using NPOI.XWPF.UserModel;
 using System;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace TemplateFiller.Extensions
 {
-    public static class NPOIExtensions
+    internal static class NPOIExtensions
     {
         public static void SetExcelCellValueByType(this NPOI.SS.UserModel.ICell cell, object? value)
         {

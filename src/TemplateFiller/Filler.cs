@@ -7,8 +7,14 @@ using TemplateFiller.Abstractions;
 
 namespace TemplateFiller
 {
+    /// <summary>
+    /// 填充器
+    /// </summary>
     public abstract partial class Filler
     {
+        /// <summary>
+        /// 模板类型
+        /// </summary>
         public TemplateType TemplateType { get; }
 
         /// <summary>
@@ -24,7 +30,7 @@ namespace TemplateFiller
         /// <summary>
         /// 填充模板
         /// </summary>
-        /// <param name="template">模板文件</param>
+        /// <param name="templateFile">模板文件</param>
         /// <param name="output">输出流</param>
         /// <param name="dataSource">数据源</param>
         /// <returns></returns>
@@ -35,7 +41,7 @@ namespace TemplateFiller
         /// 填充模板
         /// </summary>
         /// <param name="template">模板的流</param>
-        /// <param name="output">输出文件</param>
+        /// <param name="outputFile">输出文件</param>
         /// <param name="dataSource">数据源</param>
         /// <returns></returns>
         public virtual void FillTemplate(Stream template, string outputFile, object dataSource)
@@ -44,8 +50,8 @@ namespace TemplateFiller
         /// <summary>
         /// 填充模板
         /// </summary>
-        /// <param name="template">模板文件</param>
-        /// <param name="output">输出文件</param>
+        /// <param name="templateFile">模板文件</param>
+        /// <param name="outputFile">输出文件</param>
         /// <param name="dataSource">数据源</param>
         /// <returns></returns>
         public virtual void FillTemplate(string templateFile, string outputFile, object dataSource)
@@ -65,9 +71,10 @@ namespace TemplateFiller
         /// <summary>
         /// 填充模板
         /// </summary>
-        /// <param name="template">模板文件</param>
+        /// <param name="templateFile">模板文件</param>
         /// <param name="output">输出流</param>
         /// <param name="dataSource">数据源</param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public virtual Task FillTemplateAsync(string templateFile, Stream output, object dataSource, CancellationToken cancellationToken = default)
             => throw ThrowNotSupportException(TemplateType);
@@ -76,8 +83,9 @@ namespace TemplateFiller
         /// 填充模板
         /// </summary>
         /// <param name="template">模板的流</param>
-        /// <param name="output">输出文件</param>
+        /// <param name="outputFile">输出文件</param>
         /// <param name="dataSource">数据源</param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public virtual Task FillTemplateAsync(Stream template, string outputFile, object dataSource, CancellationToken cancellationToken = default)
             => throw ThrowNotSupportException(TemplateType);
@@ -85,9 +93,10 @@ namespace TemplateFiller
         /// <summary>
         /// 填充模板
         /// </summary>
-        /// <param name="template">模板文件</param>
-        /// <param name="output">输出文件</param>
+        /// <param name="templateFile">模板文件</param>
+        /// <param name="outputFile">输出文件</param>
         /// <param name="dataSource">数据源</param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public virtual Task FillTemplateAsync(string templateFile, string outputFile, object dataSource, CancellationToken cancellationToken = default)
             => throw ThrowNotSupportException(TemplateType);
