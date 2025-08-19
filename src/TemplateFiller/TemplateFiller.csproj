@@ -5,7 +5,7 @@
 	<Nullable>enable</Nullable>
 	<PackageProjectUrl>https://github.com/CSJ608/TemplateFiller</PackageProjectUrl>
 	<VersionPrefix>1.0.0</VersionPrefix>
-	<VersionSuffix>alpha.3</VersionSuffix>
+	<VersionSuffix>alpha.4</VersionSuffix>
 	<PackageReadmeFile>ReadMe.zh-Cn.md</PackageReadmeFile>
 	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 	<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -13,7 +13,7 @@
 	<Description>一款基于NPOI的占位符填充工具，可实现Word、Excel内替换占位符和填充表格的功能。</Description>
 	<RepositoryUrl>https://github.com/CSJ608/TemplateFiller</RepositoryUrl>
 	<LangVersion>12.0</LangVersion>
-	<PackageReleaseNotes>更新占位符模板规则，并支持Word</PackageReleaseNotes>
+	<PackageReleaseNotes>改变填充器的使用方式，并允许异步</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
