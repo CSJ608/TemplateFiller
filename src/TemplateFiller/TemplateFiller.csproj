@@ -17,7 +17,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NPOI" Version="2.7.4" />
+    <PackageReference Include="FileSignatures" Version="[2.0.0,)" />
+    <PackageReference Include="NPOI" Version="[2.7.3,)" />
   </ItemGroup>
 
   <ItemGroup>

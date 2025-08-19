@@ -20,8 +20,8 @@ var data = new Dictionary<string, object>()
     ["Counts"] = new int[] {1, 2, 3}
 };
 
-var filler = new NpoiExcelTemplateFiller();
-filler.FillTemplate("Templates\\Test1.xlsx", "output.xlsx", data);
+
+Filler.Excel.FillTemplate("Templates\\Test1.xlsx", "output.xlsx", data);
 
 var data2 = new DataSource()
 {
@@ -39,8 +39,7 @@ var data2 = new DataSource()
     Counts = new int[]{1, 2, 3}
 };
 
-filler.FillTemplate("Templates\\Test1.xlsx", "output2.xlsx", data2);
+Filler.Excel.FillTemplate("Templates\\Test1.xlsx", "output2.xlsx", data2);
 
-var wordFiller = new NpoiWordTemplateFiller();
-wordFiller.FillTemplate("Templates\\Test2.docx", "output.docx", data);
-wordFiller.FillTemplate("Templates\\Test2.docx", "output2.docx", data);
+Filler.Word.FillTemplate("Templates\\Test2.docx", "output.docx", data);
+Filler.Word.FillTemplate("Templates\\Test2.docx", "output2.docx", data2);

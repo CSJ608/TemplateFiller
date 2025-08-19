@@ -5,33 +5,26 @@ using TemplateFiller.Abstractions;
 
 namespace TemplateFiller
 {
-    public class Source : ISource, IDisposable
+    public class Source(object? source) : ISource, IDisposable
     {
-        private object? _source { get; set; }
-        private readonly Stack<SourceSection> _stack;
-
-        public Source(object? source)
-        {
-            _source = source;
-            _stack = new Stack<SourceSection>();
-        }
+        private readonly Stack<SourceSection> _stack = new();
 
         public object? this[string key] => GetNestedValue(key);
 
         /// <inheritdoc/>
         public IEnumerable<ISourceSection> GetChildren()
         {
-            if (_source == null)
+            if (source == null)
             {
                 yield break;
             }
 
-            if (_source is IDictionary dictionary)
+            if (source is IDictionary dictionary)
             {
                 foreach (var childKey in dictionary.Keys)
                 {
                     var key = childKey.ToString() ?? string.Empty;
-                    if (TryGetNestedValue(_source, key, out var value, out _))
+                    if (TryGetNestedValue(source, key, out var value, out _))
                     {
                         yield return CreateSection(key, key, value);
                     }
@@ -40,17 +33,17 @@ namespace TemplateFiller
                 yield break;
             }
 
-            var props = _source.GetType().GetProperties();
+            var props = source.GetType().GetProperties();
             foreach (var prop in props)
             {
-                yield return CreateSection(prop.Name, prop.Name, prop.GetValue(_source));
+                yield return CreateSection(prop.Name, prop.Name, prop.GetValue(source));
             }
         }
 
         /// <inheritdoc/>
         public ISourceSection GetSection(string key)
         {
-            if (TryGetNestedValue(_source, key, out var value, out var sectionKey))
+            if (TryGetNestedValue(source, key, out var value, out var sectionKey))
             {
                 return CreateSection(sectionKey, key, value);
             }
@@ -106,13 +99,13 @@ namespace TemplateFiller
             }
 
             value = current;
-            key = pathParts[pathParts.Length - 1];
+            key = pathParts[^1];
             return true;
         }
 
         private object? GetNestedValue(string path)
         {
-            if (TryGetNestedValue(_source, path, out var value, out _))
+            if (TryGetNestedValue(source, path, out var value, out _))
             {
                 return value;
             }
@@ -135,7 +128,7 @@ namespace TemplateFiller
 
         public void Dispose()
         {
-            _source = null;
+            source = null;
             while (_stack.Count > 0)
             {
                 var section = _stack.Pop();

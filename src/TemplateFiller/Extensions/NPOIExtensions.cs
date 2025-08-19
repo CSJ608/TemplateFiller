@@ -64,22 +64,6 @@ namespace TemplateFiller.Extensions
             return row;
         }
 
-        public static bool IsCellMerged(this NPOI.SS.UserModel.ICell cell)
-        {
-            var rowIndex = cell.RowIndex;
-            var columnIndex = cell.ColumnIndex;
-            foreach (var region in cell.Sheet.MergedRegions)
-            {
-                if (rowIndex >= region.FirstRow && rowIndex <= region.LastRow
-                    && columnIndex >= region.FirstColumn && columnIndex <= region.LastColumn)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         public static void CopyStyle(this NPOI.SS.UserModel.ICell cell, IRow templateRow)
         {
             var srcCell = templateRow.GetCell(cell.ColumnIndex);
@@ -93,21 +77,6 @@ namespace TemplateFiller.Extensions
             var str = cell.StringCellValue;
             cell.SetCellType(oldType);
             return str;
-        }
-
-        public static XWPFTableRow CreateRowAndCopyStyle(this XWPFTable table, int rowIndex, XWPFTableRow templateRow)
-        {
-            var row = templateRow.CloneRow(rowIndex);
-            foreach (var cell in row.GetTableCells())
-            {
-                while (cell.Paragraphs.Count > 0) {
-                    cell.RemoveParagraph(0);
-                }
-
-                // 拷贝了表格时，暂无法处理
-            }            
-
-            return row;
         }
 
         public static bool IsCellMerged(this XWPFTableCell cell)
