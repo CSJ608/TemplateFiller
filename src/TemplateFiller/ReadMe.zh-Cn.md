@@ -105,7 +105,7 @@ var data = new DataSource()
 };
 
 // 填充模板
-filler.FillTemplate("Template.xlsx", "output.xlsx", data);
+Filler.Excel.FillTemplate("Template.xlsx", "output.xlsx", data);
 ```
 
 填充后的效果：
