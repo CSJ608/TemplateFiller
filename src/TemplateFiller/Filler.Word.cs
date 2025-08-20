@@ -87,20 +87,22 @@ namespace TemplateFiller
                 ProcessParagraph(source, filler, doc.Paragraphs, cancellationToken);
 
                 // 处理表格
-                ProcessTables(source, filler, doc.Tables, cancellationToken);
+                ProcessTables(source, filler, doc.Tables, true, cancellationToken);
 
                 // 处理页眉页脚
                 foreach (var header in doc.HeaderList)
                 {
                     ProcessParagraph(source, filler, header.Paragraphs, cancellationToken);
+                    ProcessTables(source, filler, header.Tables, false, cancellationToken);
                 }
                 foreach (var footer in doc.FooterList)
                 {
                     ProcessParagraph(source, filler, footer.Paragraphs, cancellationToken);
+                    ProcessTables(source, filler, footer.Tables, false, cancellationToken);
                 }
             }
 
-            private static void ProcessTables(ISource source, WordValueFiller filler, IList<XWPFTable> tables, CancellationToken cancellationToken = default)
+            private static void ProcessTables(ISource source, WordValueFiller filler, IList<XWPFTable> tables, bool fillArray, CancellationToken cancellationToken = default)
             {
                 using var arrayfiller = new WordArrayFiller(null);
                 foreach (var table in tables)
@@ -113,6 +115,11 @@ namespace TemplateFiller
                         {
                             ProcessParagraph(source, filler, cell.Paragraphs, cancellationToken);
                         }
+                    }
+
+                    if (!fillArray)
+                    {
+                        continue;
                     }
 
                     arrayfiller.ChangeTarget(table);
