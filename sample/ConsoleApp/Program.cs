@@ -43,3 +43,6 @@ Filler.Excel.FillTemplate("Templates\\Test1.xlsx", "output2.xlsx", data2);
 
 Filler.Word.FillTemplate("Templates\\Test2.docx", "output.docx", data);
 Filler.Word.FillTemplate("Templates\\Test2.docx", "output2.docx", data2);
+
+using var template = new FileStream("Templates\\Test2.docx", FileMode.Open, FileAccess.Read);
+Filler.Word.FillTemplate(template, "output3.docx", data);

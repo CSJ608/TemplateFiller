@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using TemplateFiller.Abstractions;
+using TemplateFiller.Extensions;
 using TemplateFiller.Utils;
 
 namespace TemplateFiller
@@ -21,9 +22,8 @@ namespace TemplateFiller
 
             public override void FillTemplate(Stream template, Stream output, object dataSource)
             {
-                using var ms = new MemoryStream();
-                template.CopyTo(ms);
-                FillTemplateImplementation(ms, output, dataSource);
+                using var copedTemplate = template.Copy();
+                FillTemplateImplementation(copedTemplate, output, dataSource);
             }
             
             public override void FillTemplate(string templateFile, Stream output, object dataSource)
@@ -33,10 +33,9 @@ namespace TemplateFiller
             }
             public override void FillTemplate(Stream template, string outputFile, object dataSource)
             {
-                using var ms = new MemoryStream();
-                template.CopyTo(ms);
+                using var copedTemplate = template.Copy();
                 using var output = OpenOutputStream(outputFile);
-                FillTemplateImplementation(ms, output, dataSource);
+                FillTemplateImplementation(copedTemplate, output, dataSource);
             }
             public override void FillTemplate(string templateFile, string outputFile, object dataSource)
             {
@@ -46,9 +45,8 @@ namespace TemplateFiller
             }
             public override Task FillTemplateAsync(Stream template, Stream output, object dataSource, CancellationToken cancellationToken = default)
             {
-                using var ms = new MemoryStream();
-                template.CopyTo(ms);
-                FillTemplateImplementation(ms, output, dataSource, cancellationToken);
+                using var copedTemplate = template.Copy();
+                FillTemplateImplementation(copedTemplate, output, dataSource, cancellationToken);
                 return Task.CompletedTask;
             }
             public override Task FillTemplateAsync(string templateFile, Stream output, object dataSource, CancellationToken cancellationToken = default)
@@ -59,10 +57,9 @@ namespace TemplateFiller
             }
             public override Task FillTemplateAsync(Stream template, string outputFile, object dataSource, CancellationToken cancellationToken = default)
             {
-                using var ms = new MemoryStream();
-                template.CopyTo(ms);
+                using var copedTemplate = template.Copy();
                 using var output = OpenOutputStream(outputFile);
-                FillTemplateImplementation(ms, output, dataSource, cancellationToken);
+                FillTemplateImplementation(copedTemplate, output, dataSource, cancellationToken);
                 return Task.CompletedTask;
             }
             public override Task FillTemplateAsync(string templateFile, string outputFile, object dataSource, CancellationToken cancellationToken = default)
@@ -73,7 +70,7 @@ namespace TemplateFiller
                 return Task.CompletedTask;
             }
 
-            private static Stream OpenOutputStream(string outputFile)
+            private static FileStream OpenOutputStream(string outputFile)
             {
                 var directory = Path.GetDirectoryName(outputFile);
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
