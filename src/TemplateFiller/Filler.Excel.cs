@@ -20,7 +20,12 @@ namespace TemplateFiller
             }
 
             public override void FillTemplate(Stream template, Stream output, object dataSource)
-                => FillTemplateImplementation(template, output, dataSource);
+            {
+                using var ms = new MemoryStream();
+                template.CopyTo(ms);
+                FillTemplateImplementation(ms, output, dataSource);
+            }
+            
             public override void FillTemplate(string templateFile, Stream output, object dataSource)
             {
                 using var template = new FileStream(templateFile, FileMode.Open, FileAccess.Read);
@@ -28,8 +33,10 @@ namespace TemplateFiller
             }
             public override void FillTemplate(Stream template, string outputFile, object dataSource)
             {
+                using var ms = new MemoryStream();
+                template.CopyTo(ms);
                 using var output = OpenOutputStream(outputFile);
-                FillTemplateImplementation(template, output, dataSource);
+                FillTemplateImplementation(ms, output, dataSource);
             }
             public override void FillTemplate(string templateFile, string outputFile, object dataSource)
             {
@@ -39,7 +46,9 @@ namespace TemplateFiller
             }
             public override Task FillTemplateAsync(Stream template, Stream output, object dataSource, CancellationToken cancellationToken = default)
             {
-                FillTemplateImplementation(template, output, dataSource, cancellationToken);
+                using var ms = new MemoryStream();
+                template.CopyTo(ms);
+                FillTemplateImplementation(ms, output, dataSource, cancellationToken);
                 return Task.CompletedTask;
             }
             public override Task FillTemplateAsync(string templateFile, Stream output, object dataSource, CancellationToken cancellationToken = default)
@@ -50,8 +59,10 @@ namespace TemplateFiller
             }
             public override Task FillTemplateAsync(Stream template, string outputFile, object dataSource, CancellationToken cancellationToken = default)
             {
+                using var ms = new MemoryStream();
+                template.CopyTo(ms);
                 using var output = OpenOutputStream(outputFile);
-                FillTemplateImplementation(template, output, dataSource, cancellationToken);
+                FillTemplateImplementation(ms, output, dataSource, cancellationToken);
                 return Task.CompletedTask;
             }
             public override Task FillTemplateAsync(string templateFile, string outputFile, object dataSource, CancellationToken cancellationToken = default)
