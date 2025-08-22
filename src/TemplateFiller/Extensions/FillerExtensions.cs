@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+
+using static TemplateFiller.Utils.Default;
 
 namespace TemplateFiller.Extensions
 {
@@ -36,7 +35,7 @@ namespace TemplateFiller.Extensions
         /// <returns></returns>
         public static void FillTemplate(this Filler filler, Stream template, string outputFile, object dataSource)
         {
-            using var output = OpenOutputStream(outputFile);
+            using var output = OpenWritableFileStream(outputFile);
             filler.FillTemplate(template, output, dataSource);
         }
 
@@ -51,19 +50,8 @@ namespace TemplateFiller.Extensions
         public static void FillTemplate(this Filler filler, string templateFile, string outputFile, object dataSource)
         {
             using var template = new FileStream(templateFile, FileMode.Open, FileAccess.Read);
-            using var output = OpenOutputStream(outputFile);
+            using var output = OpenWritableFileStream(outputFile);
             filler.FillTemplate(template, output, dataSource);
-        }
-
-        private static FileStream OpenOutputStream(string outputFile)
-        {
-            var directory = Path.GetDirectoryName(outputFile);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            return new FileStream(outputFile, FileMode.Create, FileAccess.Write);
         }
 
         /// <summary>
@@ -92,7 +80,7 @@ namespace TemplateFiller.Extensions
         /// <returns></returns>
         public static Task FillTemplateAsync(this Filler filler, Stream template, string outputFile, object dataSource, CancellationToken cancellationToken = default)
         {
-            using var output = OpenOutputStream(outputFile);
+            using var output = OpenWritableFileStream(outputFile);
             return filler.FillTemplateAsync(template, output, dataSource, cancellationToken);
         }
 
@@ -108,7 +96,7 @@ namespace TemplateFiller.Extensions
         public static Task FillTemplateAsync(this Filler filler, string templateFile, string outputFile, object dataSource, CancellationToken cancellationToken = default)
         {
             using var template = new FileStream(templateFile, FileMode.Open, FileAccess.Read);
-            using var output = OpenOutputStream(outputFile);
+            using var output = OpenWritableFileStream(outputFile);
             return filler.FillTemplateAsync(template, output, dataSource, cancellationToken);
         }
     }

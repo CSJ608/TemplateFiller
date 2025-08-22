@@ -1,8 +1,8 @@
-﻿using NPOI.XWPF.UserModel;
+﻿using NPOI.Util;
+using NPOI.XWPF.UserModel;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using TemplateFiller.Abstractions;
 using TemplateFiller.Extensions;
 using TemplateFiller.Utils;
@@ -24,6 +24,19 @@ namespace TemplateFiller
                 using var doc = new XWPFDocument(template);
                 ProcessDocument(doc, source, cancellationToken);
                 doc.Write(output);
+            }
+
+            protected override void FillTemplateImplementation(Stream template, IEnumerable<Bag> bags, CancellationToken cancellationToken = default)
+            {
+                using var templateDoc = new XWPFDocument(template);
+                foreach (var bag in bags)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    using var doc = templateDoc.Copy();
+                    using var source = new Source(bag.DataSource);
+                    ProcessDocument(doc, source, cancellationToken);
+                    doc.Write(bag.Output);
+                }
             }
 
             private static void ProcessDocument(XWPFDocument doc, ISource source, CancellationToken cancellationToken = default)

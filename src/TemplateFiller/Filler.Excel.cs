@@ -1,11 +1,12 @@
 ﻿using FileSignatures;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
+using NPOI.Util;
 using NPOI.XSSF.UserModel;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using TemplateFiller.Abstractions;
 using TemplateFiller.Extensions;
 using TemplateFiller.Utils;
@@ -27,6 +28,20 @@ namespace TemplateFiller
                 ProcessWorkbook(workbook, source, cancellationToken);
                 workbook.Write(output);
             }
+
+            protected override void FillTemplateImplementation(Stream template, IEnumerable<Bag> bags, CancellationToken cancellationToken = default)
+            {
+                using var templateWorkbook = LoadWorkbook(template);
+                foreach (var bag in bags)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    using var workbook = templateWorkbook.Copy();
+                    using var source = new Source(bag.DataSource);
+                    ProcessWorkbook(workbook, source, cancellationToken);
+                    workbook.Write(bag.Output);
+                }
+            }
+
 
             private static IWorkbook LoadWorkbook(Stream stream)
             {
