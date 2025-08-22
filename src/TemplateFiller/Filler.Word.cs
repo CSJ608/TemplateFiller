@@ -18,68 +18,7 @@ namespace TemplateFiller
 
             }
 
-            public override void FillTemplate(Stream template, Stream output, object dataSource)
-            {
-                using var copedTemplate = template.Copy();
-                FillTemplateImplementation(copedTemplate, output, dataSource);
-            } 
-
-            public override void FillTemplate(string templateFile, Stream output, object dataSource)
-            {
-                using var template = new FileStream(templateFile, FileMode.Open, FileAccess.Read);
-                FillTemplateImplementation(template, output, dataSource);
-            }
-            public override void FillTemplate(Stream template, string outputFile, object dataSource)
-            {
-                using var copedTemplate = template.Copy();
-                using var output = OpenOutputStream(outputFile);
-                FillTemplateImplementation(copedTemplate, output, dataSource);
-            }            
-            public override void FillTemplate(string templateFile, string outputFile, object dataSource)
-            {
-                using var template = new FileStream(templateFile, FileMode.Open, FileAccess.Read);
-                using var output = OpenOutputStream(outputFile);
-                FillTemplateImplementation(template, output, dataSource);
-            }
-            public override Task FillTemplateAsync(Stream template, Stream output, object dataSource, CancellationToken cancellationToken = default)
-            {
-                using var copedTemplate = template.Copy();
-                FillTemplateImplementation(copedTemplate, output, dataSource, cancellationToken);
-                return Task.CompletedTask;
-            }
-            public override Task FillTemplateAsync(string templateFile, Stream output, object dataSource, CancellationToken cancellationToken = default)
-            {
-                using var template = new FileStream(templateFile, FileMode.Open, FileAccess.Read);
-                FillTemplateImplementation(template, output, dataSource, cancellationToken);
-                return Task.CompletedTask;
-            }
-            public override Task FillTemplateAsync(Stream template, string outputFile, object dataSource, CancellationToken cancellationToken = default)
-            {
-                using var copedTemplate = template.Copy();
-                using var output = OpenOutputStream(outputFile);
-                FillTemplateImplementation(copedTemplate, output, dataSource, cancellationToken);
-                return Task.CompletedTask;
-            }
-            public override Task FillTemplateAsync(string templateFile, string outputFile, object dataSource, CancellationToken cancellationToken = default)
-            {
-                using var template = new FileStream(templateFile, FileMode.Open, FileAccess.Read);
-                using var output = OpenOutputStream(outputFile);
-                FillTemplateImplementation(template, output, dataSource, cancellationToken);
-                return Task.CompletedTask;
-            }
-
-            private static FileStream OpenOutputStream(string outputFile)
-            {
-                var directory = Path.GetDirectoryName(outputFile);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
-                return new FileStream(outputFile, FileMode.Create, FileAccess.Write);
-            }
-
-            private static void FillTemplateImplementation(Stream template, Stream output, object dataSource, CancellationToken cancellationToken = default)
+            protected override void FillTemplateImplementation(Stream template, Stream output, object dataSource, CancellationToken cancellationToken = default)
             {
                 using var source = new Source(dataSource);
                 using var doc = new XWPFDocument(template);

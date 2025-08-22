@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using ConsoleApp;
 using TemplateFiller;
+using TemplateFiller.Extensions;
 
 Console.WriteLine("Hello, World!");
 
@@ -19,7 +20,6 @@ var data = new Dictionary<string, object>()
     },
     ["Counts"] = new int[] {1, 2, 3}
 };
-
 
 Filler.Excel.FillTemplate("Templates\\Test1.xlsx", "output.xlsx", data);
 
@@ -45,4 +45,5 @@ Filler.Word.FillTemplate("Templates\\Test2.docx", "output.docx", data);
 Filler.Word.FillTemplate("Templates\\Test2.docx", "output2.docx", data2);
 
 using var template = new FileStream("Templates\\Test2.docx", FileMode.Open, FileAccess.Read);
-Filler.Word.FillTemplate(template, "output3.docx", data);
+using var output = new FileStream("output3.docx", FileMode.Create, FileAccess.Write);
+Filler.Word.FillTemplate(template, output, data);
