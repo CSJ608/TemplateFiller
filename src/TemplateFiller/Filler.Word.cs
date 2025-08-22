@@ -1,4 +1,5 @@
 ﻿using NPOI.Util;
+using NPOI.WP.UserModel;
 using NPOI.XWPF.UserModel;
 using System.Collections.Generic;
 using System.IO;
@@ -41,7 +42,7 @@ namespace TemplateFiller
 
             private static void ProcessDocument(XWPFDocument doc, ISource source, CancellationToken cancellationToken = default)
             {
-                using var filler = new WordValueFiller(null);
+                using var filler = new WordValueFiller(null);                
 
                 // 处理文档
                 ProcessParagraph(source, filler, doc.Paragraphs, cancellationToken);
@@ -59,6 +60,22 @@ namespace TemplateFiller
                 {
                     ProcessParagraph(source, filler, footer.Paragraphs, cancellationToken);
                     ProcessTables(source, filler, footer.Tables, false, cancellationToken);
+                }
+
+                using var imageFiller = new WordImageFiller();
+                var paragraphs = doc.Paragraphs;
+                // 处理图片
+                foreach (var paragraph in paragraphs)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    imageFiller.ChangeTarget(paragraph);
+                    if (!imageFiller.Check())
+                    {
+                        continue;
+                    }
+
+                    imageFiller.Fill(source);
                 }
             }
 
