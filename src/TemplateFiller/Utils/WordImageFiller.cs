@@ -41,17 +41,17 @@ namespace TemplateFiller.Utils
 
         private static void CheckHasImagePlaceholder(XWPFDocument? document)
         {
-            if (document == null)
-            {
-                return;
-            }
+            //if (document == null)
+            //{
+            //    return;
+            //}
 
-            var draws = paragraph.Runs.SelectMany(t => t.GetCTR().GetDrawingList()).ToList();
-            var picts = paragraph.Runs.SelectMany(t => t.GetEmbeddedPictures()).ToList();
-            if (draws.Count + picts.Count == 0)
-            {
-                return;
-            }
+            //var draws = paragraph.Runs.SelectMany(t => t.GetCTR().GetDrawingList()).ToList();
+            //var picts = paragraph.Runs.SelectMany(t => t.GetEmbeddedPictures()).ToList();
+            //if (draws.Count + picts.Count == 0)
+            //{
+            //    return;
+            //}
 
             //foreach (var anchor in draws.SelectMany(t => t.anchor))
             //{
@@ -65,13 +65,13 @@ namespace TemplateFiller.Utils
             //    drawName.
             //    }
 
-            foreach (var pic in picts)
-            {
-                var picName = pic.GetCTPicture().nvPicPr.cNvPr.name;
-                var test = document.GetRelationId(pic.GetPictureData());
-            }
+            //foreach (var pic in picts)
+            //{
+            //    var picName = pic.GetCTPicture().nvPicPr.cNvPr.name;
+            //    var test = document.GetRelationId(pic.GetPictureData());
+            //}
 
-            return false;
+            //return false;
         }
     }
 }
