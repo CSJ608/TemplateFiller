@@ -13,7 +13,7 @@ namespace ConsoleApp
                 Filler.Word.FillTemplate("Templates\\Test2.docx", $"temp//{nameof(UsingClass)}//output.docx", TestData);
             }
 
-            public static DataSource TestData => new()
+            public static DataSource TestData => new(Utils.GetBarcode("123456", ZXing.BarcodeFormat.QR_CODE))
             {
                 StartTime = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd"),
                 EndTime = DateTime.Now.ToString("yyyy-MM-dd"),

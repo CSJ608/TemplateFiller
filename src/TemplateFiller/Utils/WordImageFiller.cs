@@ -1,4 +1,5 @@
-﻿using NPOI.XWPF.UserModel;
+﻿using NPOI.WP.UserModel;
+using NPOI.XWPF.UserModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,60 +19,12 @@ namespace TemplateFiller.Utils
     /// <remarks>
     /// 占位符参见：<seealso cref="PlaceholderConsts.ValuePlaceholder"/>
     /// </remarks>
-    public class WordImageFiller : ITargetFiller, IDisposable
+    public class WordImageFiller(XWPFDocument? document) : ITargetFiller, IDisposable
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public WordImageFiller()
-        {
-            _document = null;
-            _paragraph = null;
-            FillEmbdata = false;
-        }
-
-        private XWPFParagraph? _paragraph { get; set; }
-
-        private XWPFDocument? _document { get; set; }
-
-        public bool FillEmbdata { get; private set; }
+        private XWPFDocument? Document { get; set; } = document;
 
         /// <inheritdoc/>
-        public bool Check()
-        {
-            if (_document == null && _paragraph == null)
-            {
-                return false;
-            }
-
-            if(_paragraph != null)
-            {
-                var draws = _paragraph.Runs.SelectMany(t => t.GetCTR().GetDrawingList()).ToList();
-                var picts = _paragraph.Runs.SelectMany(t => t.GetEmbeddedPictures()).ToList();
-                if (draws.Count + picts.Count == 0) { 
-                    return false;
-                }
-
-                foreach (var anchor in draws.SelectMany(t => t.anchor))
-                {
-                    anchor.graphic.AddNewGraphicData
-                }
-
-                var graphics = draws.SelectMany(t => t.anchor).Select(t => t.graphic).ToList();
-                foreach (var item in graphics)
-                {
-                    var drawName = item.AddNewGraphicData();
-                    drawName.
-                }
-
-                foreach(var pic in picts)
-                {
-                    var picName = pic.GetCTPicture().nvPicPr.cNvPr.name;
-                }
-            }
-
-            return false;
-        }
+        public bool Check() => true;
 
         /// <inheritdoc/>
         public void Fill(ISource source)
@@ -79,31 +32,46 @@ namespace TemplateFiller.Utils
             throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// 将目标切换为段落内的嵌入式图片
-        /// </summary>
-        /// <param name="paragraph"></param>
-        public void ChangeTarget(XWPFParagraph paragraph)
-        {
-            _paragraph = paragraph;
-            _document = null;
-            FillEmbdata = true;
-        }
-
-        /// <summary>
-        /// 将目标切换为文档内的非嵌入式图片
-        /// </summary>
-        /// <param name="document"></param>
-        public void ChangeTarget(XWPFDocument document)
-        {
-            _document = document;
-            _paragraph = null;
-            FillEmbdata = false;
-        }
-
+        /// <inheritdoc/>
         public void Dispose()
         {
-            
+            Document = null;
+            GC.SuppressFinalize(this);
+        }
+
+        private static void CheckHasImagePlaceholder(XWPFDocument? document)
+        {
+            if (document == null)
+            {
+                return;
+            }
+
+            var draws = paragraph.Runs.SelectMany(t => t.GetCTR().GetDrawingList()).ToList();
+            var picts = paragraph.Runs.SelectMany(t => t.GetEmbeddedPictures()).ToList();
+            if (draws.Count + picts.Count == 0)
+            {
+                return;
+            }
+
+            //foreach (var anchor in draws.SelectMany(t => t.anchor))
+            //{
+            //    anchor.graphic.AddNewGraphicData
+            //    }
+
+            //var graphics = draws.SelectMany(t => t.anchor).Select(t => t.graphic).ToList();
+            //foreach (var item in graphics)
+            //{
+            //    var drawName = item.AddNewGraphicData();
+            //    drawName.
+            //    }
+
+            foreach (var pic in picts)
+            {
+                var picName = pic.GetCTPicture().nvPicPr.cNvPr.name;
+                var test = document.GetRelationId(pic.GetPictureData());
+            }
+
+            return false;
         }
     }
 }

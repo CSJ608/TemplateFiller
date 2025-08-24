@@ -19,9 +19,9 @@ namespace TemplateFiller.Extensions
             var match = regex.Match(target);
             if (match.Success)
             {
-                return target.Substring(0, match.Index) +
+                return target[..match.Index] +
                        replacement +
-                       target.Substring(match.Index + match.Length);
+                       target[(match.Index + match.Length)..];
             }
             return target;
         }
@@ -69,7 +69,7 @@ namespace TemplateFiller.Extensions
             if (length < 0 || startIndex + length > str.Length)
                 throw new ArgumentOutOfRangeException(nameof(length), "要移除的长度超出字符串范围");
 
-            return str.Substring(0, startIndex) + str.Substring(startIndex + length);
+            return str[..startIndex] + str[(startIndex + length)..];
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace TemplateFiller.Extensions
             if (value == null)
                 return str;
 
-            return str.Substring(0, startIndex) + value + str.Substring(startIndex);
+            return str[..startIndex] + value + str[startIndex..];
         }
     }
 }

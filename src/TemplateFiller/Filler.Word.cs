@@ -62,19 +62,10 @@ namespace TemplateFiller
                     ProcessTables(source, filler, footer.Tables, false, cancellationToken);
                 }
 
-                using var imageFiller = new WordImageFiller(null);
-                var paragraphs = doc.Paragraphs;
                 // 处理图片
-                foreach (var paragraph in paragraphs)
+                using var imageFiller = new WordImageFiller(doc);
+                if (imageFiller.Check())
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    imageFiller.ChangeTarget(paragraph);
-                    if (!imageFiller.Check())
-                    {
-                        continue;
-                    }
-
                     imageFiller.Fill(source);
                 }
             }
