@@ -62,7 +62,7 @@ namespace TemplateFiller
                     ProcessTables(source, filler, footer.Tables, false, cancellationToken);
                 }
 
-                using var imageFiller = new WordImageFiller();
+                using var imageFiller = new WordImageFiller(null);
                 var paragraphs = doc.Paragraphs;
                 // 处理图片
                 foreach (var paragraph in paragraphs)
