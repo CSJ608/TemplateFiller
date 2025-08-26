@@ -69,13 +69,13 @@ namespace TemplateFiller.Utils
             foreach (var header in document.HeaderList)
             {
                 ProcessParagraphs(document, header.Paragraphs, source, cancellationToken);
-                ProcessTables(document, document.Tables, source, cancellationToken);
+                ProcessTables(document, header.Tables, source, cancellationToken);
             }
 
             foreach (var footer in document.FooterList)
             {
                 ProcessParagraphs(document, footer.Paragraphs, source, cancellationToken);
-                ProcessTables(document, document.Tables, source, cancellationToken);
+                ProcessTables(document, footer.Tables, source, cancellationToken);
             }
         }
 
@@ -106,49 +106,6 @@ namespace TemplateFiller.Utils
                 {
                     continue;
                 }
-
-                //foreach (var pic in pictures)
-                //{
-                //    var picName = pic.GetCTPicture().nvPicPr.cNvPr.name;
-                //    if (!picName.IsMatch(PlaceholderConsts.ValuePlaceholder, out var _, out var _))
-                //    {
-                //        continue;
-                //    }
-
-                //    var match = Regex.Match(picName, PlaceholderConsts.ValuePlaceholder); // 与多个占位符匹配时，只处理第一个
-                //    var key = match.Groups[1].Value;
-                //    var imgData = source[key];
-                //    if (imgData is not Stream stream)
-                //    {
-                //        continue;
-                //    }
-
-                //    var width = pic.Width;
-                //    var height = pic.Height;
-
-                //    var imgType = GetImgType(source, stream, key);
-                //    var pictureType = imgType.ToLower() switch
-                //    {
-                //        "emf" => PictureType.EMF,
-                //        "wmf" => PictureType.WMF,
-                //        "pict" => PictureType.PICT,
-                //        "jpeg" => PictureType.JPEG,
-                //        "png" => PictureType.PNG,
-                //        "dib" => PictureType.DIB,
-                //        "gif" => PictureType.GIF,
-                //        "tiff" => PictureType.TIFF,
-                //        "eps" => PictureType.EPS,
-                //        "bmp" => PictureType.BMP,
-                //        "wpg" => PictureType.WPG,
-                //        "svg" => PictureType.SVG,
-
-                //        _ => throw new InvalidOperationException()
-                //    };
-                //    stream.Seek(0, SeekOrigin.Begin);
-                //    var rId = document.AddPictureData(stream, (int)pictureType);
-                //    var dpart = document.RelationParts.First(t => t.Relationship.Id == rId).Relationship;
-                //    pic.SetPictureReference(dpart);
-                //}
 
                 ProcessRuns(document, paragraph.Runs, source);
             }
