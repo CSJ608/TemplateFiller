@@ -63,6 +63,7 @@ namespace TemplateFiller
                     _ => throw new NotSupportedException($"File format '{format?.Extension ?? string.Empty}' is not supported. Supported formats: .xls, .xlsx"),
                 };
             }
+            
             private static void ProcessWorkbook(IWorkbook workbook, ISource source, CancellationToken cancellationToken = default)
             {
                 for (int i = 0; i < workbook.NumberOfSheets; i++)

@@ -7,9 +7,9 @@ namespace TemplateFiller
     /// <inheritdoc/>
     public class SourceSection : ISourceSection, IDisposable
     {
-        private ISource? _source { get; set; }
-        private Source? _sectionSource { get; set; }
-        private object? _value { get; set; }
+        private ISource? Source { get; set; }
+        private Source? SectionSource { get; set; }
+        private object? ValueCached { get; set; }
         private readonly string _key;
         private readonly string _path;
 
@@ -22,18 +22,18 @@ namespace TemplateFiller
         /// <param name="value">该节点的值</param>
         internal SourceSection(ISource? source, string key, string path, object? value)
         {
-            _source = source;
+            Source = source;
             _key = key;
             _path = path;
-            _value = value;
+            ValueCached = value;
 
             if (value == null)
             {
-                _sectionSource = null;
+                SectionSource = null;
             }
             else
             {
-                _sectionSource = new Source(value);
+                SectionSource = new Source(value);
             }
         }
 
@@ -47,39 +47,41 @@ namespace TemplateFiller
         public string Path => _path;
 
         /// <inheritdoc/>
-        public object? Value => _value;
+        public object? Value => ValueCached;
 
         /// <inheritdoc/>
         public void Dispose()
         {
-            _value = null;
-            _source = null;
-            if (_sectionSource != null)
+            ValueCached = null;
+            Source = null;
+            if (SectionSource != null)
             {
-                _sectionSource.Dispose();
-                _sectionSource = null;
+                SectionSource.Dispose();
+                SectionSource = null;
             }
+
+            GC.SuppressFinalize(this);
         }
 
         private object? GetValue(string key)
         {
-            if (_sectionSource == null)
+            if (SectionSource == null)
             {
                 return null;
             }
 
-            return _sectionSource[key];
+            return SectionSource[key];
         }
 
         /// <inheritdoc/>
         public IEnumerable<ISourceSection> GetChildren()
         {
-            if (_sectionSource == null)
+            if (SectionSource == null)
             {
                 yield break;
             }
 
-            foreach (var section in _sectionSource.GetChildren())
+            foreach (var section in SectionSource.GetChildren())
             {
                 yield return section;
             }
@@ -88,14 +90,14 @@ namespace TemplateFiller
         /// <inheritdoc/>
         public ISourceSection GetSection(string key)
         {
-            if (_sectionSource == null)
+            if (SectionSource == null)
             {
                 return Empty;
             }
 
-            return _sectionSource.GetSection(key);
+            return SectionSource.GetSection(key);
         }
 
-        internal static SourceSection Empty => new SourceSection(null, string.Empty, string.Empty, null);
+        internal static SourceSection Empty => new(null, string.Empty, string.Empty, null);
     }
 }

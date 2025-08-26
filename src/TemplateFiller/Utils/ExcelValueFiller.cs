@@ -17,28 +17,47 @@ namespace TemplateFiller.Utils
     /// </remarks>
     public sealed class ExcelValueFiller(ICell? cell) : ITargetFiller, IDisposable
     {
-        private ICell? _cell { get; set; } = cell;
+        private ICell? Cell { get; set; } = cell;
 
         /// <inheritdoc/>
-        public bool Check()
+        public bool Check() => CheckHasValuePlaceholder(Cell);
+
+        /// <inheritdoc/>
+        public void Fill(ISource source) => FillValueData(Cell, source);
+
+        /// <summary>
+        /// 更换目标
+        /// </summary>
+        /// <param name="cell"></param>
+        public void ChangeTarget(ICell? cell)
         {
-            if (_cell == null)
+            Cell = cell;
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            Cell = null;
+            GC.SuppressFinalize(this);
+        }
+
+        private static bool CheckHasValuePlaceholder(ICell? cell)
+        {
+            if (cell == null)
             {
                 return false;
             }
 
-            return Regex.IsMatch(_cell.GetStringValue(), PlaceholderConsts.ValuePlaceholder);
+            return Regex.IsMatch(cell.GetStringValue(), PlaceholderConsts.ValuePlaceholder);
         }
 
-        /// <inheritdoc/>
-        public void Fill(ISource source)
-        {
-            if (_cell == null)
+        private static void FillValueData(ICell? cell, ISource source) {
+            if (cell == null)
             {
                 return;
             }
 
-            var str = _cell.GetStringValue();
+            var str = cell.GetStringValue();
 
             if (!str.IsMatch(PlaceholderConsts.ValuePlaceholder, out var patternOnly, out var matchCount))
             {
@@ -54,23 +73,7 @@ namespace TemplateFiller.Utils
             });
 
             var filledValue = patternOnly && matchCount == 1 ? value : replaceStr;
-            _cell.SetExcelCellValueByType(filledValue);
-        }
-
-        /// <summary>
-        /// 更换目标
-        /// </summary>
-        /// <param name="cell"></param>
-        public void ChangeTarget(ICell? cell)
-        {
-            _cell = cell;
-        }
-
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            _cell = null;
+            cell.SetExcelCellValueByType(filledValue);
         }
     }
 }

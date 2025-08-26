@@ -12,7 +12,7 @@
 	<Authors>Marci</Authors>
 	<Description>一款基于NPOI的占位符填充工具，可实现Word、Excel内替换占位符和填充表格的功能。</Description>
 	<RepositoryUrl>https://github.com/CSJ608/TemplateFiller</RepositoryUrl>
-	<LangVersion>12.0</LangVersion>
+	<LangVersion>latest</LangVersion>
 	<PackageReleaseNotes>修复模板流被关闭的问题</PackageReleaseNotes>
 	<GenerateDocumentationFile>True</GenerateDocumentationFile>
 	<ProduceReferenceAssembly>True</ProduceReferenceAssembly>
@@ -21,8 +21,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FileSignatures" Version="[2.0.0,)" />
-    <PackageReference Include="NPOI" Version="[2.7.3,)" />
+    <PackageReference Include="FileSignatures" Version="2.0.0" />
+    <PackageReference Include="NPOI" Version="2.7.3" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Text.RegularExpressions;
+using System.Threading;
 using TemplateFiller.Abstractions;
 using TemplateFiller.Consts;
 using TemplateFiller.Extensions;
@@ -18,31 +19,51 @@ namespace TemplateFiller.Utils
     /// <remarks>
     /// 占位符参见：<seealso cref="PlaceholderConsts.ArrayPlaceholder"/>
     /// </remarks>
-    public sealed class ExcelArrayFiller(ICell? cell) : ITargetFiller, IDisposable
+    public sealed class ExcelArrayFiller(ICell? cell, CancellationToken cancellationToken = default) : ITargetFiller, IDisposable
     {
-        private ICell? _cell { get; set; } = cell;
+        private ICell? Cell { get; set; } = cell;
+        private CancellationToken CancellationToken { get; } = cancellationToken;
 
         /// <inheritdoc/>
-        public bool Check()
-        {
-            if (_cell == null)
-            {
-                return false;
-            }
+        public bool Check() => CheckHasArrayPlaceholder(Cell);
 
-            var match = Regex.Match(_cell.GetStringValue(), PlaceholderConsts.ArrayPlaceholder);
-            return match.Success;
+        /// <inheritdoc/>
+        public void Fill(ISource source) => FillArrayData(Cell, source, CancellationToken);
+
+        /// <summary>
+        /// 更换目标
+        /// </summary>
+        /// <param name="cell"></param>
+        public void ChangeTarget(ICell? cell)
+        {
+            Cell = cell;
         }
 
         /// <inheritdoc/>
-        public void Fill(ISource source)
+        public void Dispose()
         {
-            if (_cell == null)
+            Cell = null;
+            GC.SuppressFinalize(this);
+        }
+
+        private static bool CheckHasArrayPlaceholder(ICell? cell)
+        {
+            if (cell == null)
+            {
+                return false;
+            }
+            var match = Regex.Match(cell.GetStringValue(), PlaceholderConsts.ArrayPlaceholder);
+            return match.Success;
+        }
+
+        private static void FillArrayData(ICell? cell, ISource source, CancellationToken cancellationToken = default)
+        {
+            if (cell == null)
             {
                 return;
             }
 
-            var str = _cell.GetStringValue();
+            var str = cell.GetStringValue();
             if (!str.IsMatch(PlaceholderConsts.ArrayPlaceholder, out var patternOnly, out var matchCount))
             {
                 return;
@@ -51,7 +72,6 @@ namespace TemplateFiller.Utils
             var match = Regex.Match(str, PlaceholderConsts.ArrayPlaceholder); // 同一个单元格内有多个时，只匹配一个
 
             var arrayPath = match.Groups["collectionPath"].Value;
-            var fullMatch = match.Value;
             string? propertyName = null;
             if (match.Groups["propertyPath"].Success)
             {
@@ -65,18 +85,20 @@ namespace TemplateFiller.Utils
                 return;
             }
 
-            if (!(section.Value is IEnumerable enumerable))
+            if (section.Value is not IEnumerable enumerable)
             {
                 return;
             }
 
-            var sheet = _cell.Sheet;
-            var startRow = _cell.RowIndex;
-            var column = _cell.ColumnIndex;
+            var sheet = cell.Sheet;
+            var startRow = cell.RowIndex;
+            var column = cell.ColumnIndex;
             var rowOffset = 0;
-            var templateRow = _cell.Row;
+            var templateRow = cell.Row;
             foreach (var item in enumerable)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 using var s = new Source(item);
                 var value = propertyName == null ? item?.ToString() ?? string.Empty : s[propertyName];
                 var replaceStr = str.TryReplaceFirstMatch(PlaceholderConsts.ArrayPlaceholder, value?.ToString() ?? string.Empty);
@@ -106,21 +128,6 @@ namespace TemplateFiller.Utils
                 currentCell.SetExcelCellValueByType(filledValue);
                 rowOffset++;
             }
-        }
-
-        /// <summary>
-        /// 更换目标
-        /// </summary>
-        /// <param name="cell"></param>
-        public void ChangeTarget(ICell? cell)
-        {
-            _cell = cell;
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            _cell = null;
         }
     }
 }

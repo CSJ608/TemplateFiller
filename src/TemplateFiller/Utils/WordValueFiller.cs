@@ -18,28 +18,47 @@ namespace TemplateFiller.Utils
     /// </remarks>
     public sealed class WordValueFiller(XWPFParagraph? paragraph) : ITargetFiller, IDisposable
     {
-        private XWPFParagraph? _paragraph { get; set; } = paragraph;
+        private XWPFParagraph? Paragraph { get; set; } = paragraph;
 
         /// <inheritdoc/>
-        public bool Check()
-        {
-            if (_paragraph == null)
-            {
-                return false;
-            }
+        public bool Check() => CheckHasValuePlaceholder(Paragraph);
 
-            return Regex.IsMatch(_paragraph.Text, PlaceholderConsts.ValuePlaceholder);
+        /// <inheritdoc/>
+        public void Fill(ISource source) => FillValueData(Paragraph, source);
+
+        /// <summary>
+        /// 更换目标
+        /// </summary>
+        /// <param name="paragraph"></param>
+        public void ChangeTarget(XWPFParagraph? paragraph)
+        {
+            Paragraph = paragraph;
         }
 
         /// <inheritdoc/>
-        public void Fill(ISource source)
+        public void Dispose()
         {
-            if (_paragraph == null)
+            Paragraph = null;
+            GC.SuppressFinalize(this);
+        }
+
+        private static bool CheckHasValuePlaceholder(XWPFParagraph? paragraph)
+        {
+            if (paragraph == null)
+            {
+                return false;
+            }
+            return Regex.IsMatch(paragraph.Text, PlaceholderConsts.ValuePlaceholder);
+        }
+
+        private static void FillValueData(XWPFParagraph? paragraph, ISource source)
+        {
+            if (paragraph == null)
             {
                 return;
             }
 
-            if (!_paragraph.Text.IsMatch(PlaceholderConsts.ValuePlaceholder, out var patternOnly, out var matchCount))
+            if (!paragraph.Text.IsMatch(PlaceholderConsts.ValuePlaceholder, out var patternOnly, out var matchCount))
             {
                 return;
             }
@@ -47,16 +66,16 @@ namespace TemplateFiller.Utils
             // todo 移除run前需要考虑run内是否有图片。如果有图片的话就不能移除run
             if (patternOnly)
             {
-                var replaceStr = BuildReplaceText(source, _paragraph.Text);
-                while (_paragraph.Runs.Count > 1)
+                var replaceStr = BuildReplaceText(source, paragraph.Text);
+                while (paragraph.Runs.Count > 1)
                 {
-                    _paragraph.RemoveRun(1);
+                    paragraph.RemoveRun(1);
                 }
-                _paragraph.Runs[0].SetText(replaceStr);
+                paragraph.Runs[0].SetText(replaceStr);
                 return;
             }
 
-            var matches = _paragraph.Runs.Select(t => t.Text).ToArray().FindMatchingSubstrings(PlaceholderConsts.ValuePlaceholder);
+            var matches = paragraph.Runs.Select(t => t.Text).ToArray().FindMatchingSubstrings(PlaceholderConsts.ValuePlaceholder);
             if (matches.Count == 0)
             {
                 return;
@@ -72,23 +91,23 @@ namespace TemplateFiller.Utils
                 switch (subStrings.Count)
                 {
                     case 1:
-                        subStrings.RemoveMatchedTextInHeadRun(_paragraph);
-                        subStrings.AddReplaceValueToHeadRun(_paragraph, replaceStr);
+                        subStrings.RemoveMatchedTextInHeadRun(paragraph);
+                        subStrings.AddReplaceValueToHeadRun(paragraph, replaceStr);
                         break;
                     case 2:
                         // 模式被分割在两个run中，那么移除头部和尾部与模式匹配的文本。然后在头部末尾添加
-                        subStrings.RemoveMatchedTextInHeadRun(_paragraph);
-                        subStrings.RemoveMatchedTextInTailRun(_paragraph);
-                        subStrings.AddReplaceValueToHeadRun(_paragraph, replaceStr);
-                        subStrings.RemoveTailRunIfTextIsEmptyOrNull(_paragraph);
+                        subStrings.RemoveMatchedTextInHeadRun(paragraph);
+                        subStrings.RemoveMatchedTextInTailRun(paragraph);
+                        subStrings.AddReplaceValueToHeadRun(paragraph, replaceStr);
+                        subStrings.RemoveTailRunIfTextIsEmptyOrNull(paragraph);
                         break;
                     case >= 3:
                         // 模式被分割在多个run中，那么移除头部、尾部与模式匹配的文本，移除头尾之间的所有run。然后在头部末尾添加
-                        subStrings.RemoveMatchedTextInHeadRun(_paragraph);
-                        subStrings.RemoveMatchedTextInTailRun(_paragraph);
-                        subStrings.RemoveRunsBetweenHeadAndTail(_paragraph);
-                        subStrings.AddReplaceValueToHeadRun(_paragraph, replaceStr);
-                        subStrings.RemoveTailRunIfTextIsEmptyOrNull(_paragraph);
+                        subStrings.RemoveMatchedTextInHeadRun(paragraph);
+                        subStrings.RemoveMatchedTextInTailRun(paragraph);
+                        subStrings.RemoveRunsBetweenHeadAndTail(paragraph);
+                        subStrings.AddReplaceValueToHeadRun(paragraph, replaceStr);
+                        subStrings.RemoveTailRunIfTextIsEmptyOrNull(paragraph);
                         break;
                     default:
                         break;
@@ -103,21 +122,6 @@ namespace TemplateFiller.Utils
                 var key = match.Groups[1].Value;
                 return source[key]?.ToString() ?? string.Empty;
             });
-        }
-
-        /// <summary>
-        /// 更换目标
-        /// </summary>
-        /// <param name="paragraph"></param>
-        public void ChangeTarget(XWPFParagraph? paragraph)
-        {
-            _paragraph = paragraph;
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            _paragraph = null;
         }
     }
 }

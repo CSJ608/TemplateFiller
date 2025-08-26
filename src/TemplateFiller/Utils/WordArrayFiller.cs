@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using TemplateFiller.Abstractions;
 using TemplateFiller.Consts;
 using TemplateFiller.Extensions;
@@ -20,20 +21,42 @@ namespace TemplateFiller.Utils
     /// <remarks>
     /// 占位符参见：<seealso cref="PlaceholderConsts.ArrayPlaceholder"/>
     /// </remarks>
-    public sealed class WordArrayFiller(XWPFTable? table) : ITargetFiller, IDisposable
+    public sealed class WordArrayFiller(XWPFTable? table, CancellationToken cancellationToken = default) : ITargetFiller, IDisposable
     {
-        private XWPFTable? _table { get; set; } = table;
-        private Dictionary<int, (IEnumerator enumerator, string? propertyName)?> ReplaceSource { get; set; } = [];
+        private XWPFTable? Table { get; set; } = table;
+        private CancellationToken CancellationToken { get; } = cancellationToken;
+        private Dictionary<int, (IEnumerator enumerator, string? propertyName)?> ReplaceSource { get; } = [];
 
         /// <inheritdoc/>
-        public bool Check()
+        public bool Check() => CheckHasArrayPlaceholder(Table);
+
+        /// <inheritdoc/>
+        public void Fill(ISource source) => FillArrayData(Table, source, ReplaceSource, CancellationToken);
+
+        /// <summary>
+        /// 更换目标
+        /// </summary>
+        /// <param name="table"></param>
+        public void ChangeTarget(XWPFTable table)
         {
-            if (_table == null)
+            Table = table;
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            Table = null;
+            GC.SuppressFinalize(this);
+        }
+
+        private static bool CheckHasArrayPlaceholder(XWPFTable? table)
+        {
+            if (table == null)
             {
                 return false;
             }
 
-            foreach (var row in _table.Rows)
+            foreach (var row in table.Rows)
             {
                 foreach (var cell in row.GetTableCells())
                 {
@@ -48,25 +71,26 @@ namespace TemplateFiller.Utils
 
             return false;
         }
-
-        /// <inheritdoc/>
-        public void Fill(ISource source)
+        
+        private static void FillArrayData(XWPFTable? table, ISource source, Dictionary<int, (IEnumerator enumerator, string? propertyName)?> rs, CancellationToken cancellationToken = default)
         {
-            if (_table == null)
+            if (table == null)
             {
                 return;
             }
 
             var startRowIndex = 0;
-            while (startRowIndex < _table.Rows.Count)
+            while (startRowIndex < table.Rows.Count)
             {
-                var row = _table.Rows[startRowIndex];
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var row = table.Rows[startRowIndex];
                 var cells = row.GetTableCells();
-                ResetReplaceSource();
-                BuildReplaceSource(source, cells);
+                ResetReplaceSource(rs);
+                BuildReplaceSource(rs, source, cells);
 
                 // 一整行内没有占位符，考虑下一行
-                if (IsReplaceSourceEmpty())
+                if (IsReplaceSourceEmpty(rs))
                 {
                     startRowIndex++;
                     continue;
@@ -75,16 +99,18 @@ namespace TemplateFiller.Utils
                 // 当前行内至少有一列存在占位符。
                 // 填充当前行的所有占位符
                 var rowOffset = 1;
-                var templateRow = _table.Rows[startRowIndex];
-                foreach (var allReplaceValues in GetRowReplaceValues())
+                var templateRow = table.Rows[startRowIndex];
+                foreach (var allReplaceValues in GetRowReplaceValues(rs))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     // 若目标行不存在，则在表格末尾添加一行模板行的拷贝
                     // 若目标行存在，并且待填充的各列内容都为空，且不存在合并的单元格，则删除目标行后，再插入模板行的拷贝
                     // 若目标行存在，并且待填充的各列存在某一列内容不为空，或存在合并的单元格，则插入模板行的拷贝
                     // 最后对插入的模板行的各列进行占位符替换
 
                     var targetRowIndex = startRowIndex + rowOffset;
-                    var targetRow = _table.GetRow(targetRowIndex);
+                    var targetRow = table.GetRow(targetRowIndex);
                     if (targetRow == null)
                     {
                         targetRow = templateRow.CloneRow(targetRowIndex);
@@ -113,7 +139,7 @@ namespace TemplateFiller.Utils
                         targetRow = templateRow.CloneRow(targetRowIndex);
                         if (!hasText && !existsMerged)
                         {
-                            _table.RemoveRow(targetRowIndex + 1);
+                            table.RemoveRow(targetRowIndex + 1);
                         }
                     }
 
@@ -128,19 +154,23 @@ namespace TemplateFiller.Utils
                 }
 
                 // 删除模板行
-                _table.RemoveRow(startRowIndex);
+                table.RemoveRow(startRowIndex);
                 startRowIndex += rowOffset - 1;
             }
         }
 
-        private void BuildReplaceSource(ISource source, List<XWPFTableCell> cells)
+        private static void ResetReplaceSource(Dictionary<int, (IEnumerator enumerator, string? propertyName)?> rs)
+        {
+            rs.Clear();
+        }
+
+        private static void BuildReplaceSource(Dictionary<int, (IEnumerator enumerator, string? propertyName)?> rs, ISource source, List<XWPFTableCell> cells)
         {
             for (int columnIndex = 0; columnIndex < cells.Count; columnIndex++)
             {
                 var cell = cells[columnIndex];
                 var str = cell.GetText();
-
-                if (!str.IsMatch(PlaceholderConsts.ArrayPlaceholder, out var patternOnly, out var matchCount))
+                if (!str.IsMatch(PlaceholderConsts.ArrayPlaceholder, out _, out _))
                 {
                     continue;
                 }
@@ -153,7 +183,7 @@ namespace TemplateFiller.Utils
 
                 // 需要在当前单元格及其下方填充数据
                 var arrayPath = match.Groups["collectionPath"].Value;
-                var fullMatch = match.Value;
+
                 string? propertyName = null;
                 if (match.Groups["propertyPath"].Success)
                 {
@@ -167,36 +197,31 @@ namespace TemplateFiller.Utils
                     continue;
                 }
 
-                if (!(section.Value is IEnumerable enumerable))
+                if (section.Value is not IEnumerable enumerable)
                 {
                     continue;
                 }
                 var enumerator = enumerable.GetEnumerator();
-                AddReplaceSource(columnIndex, enumerator, propertyName);
+                AddReplaceSource(rs, columnIndex, enumerator, propertyName);
             }
         }
 
-        private void ResetReplaceSource()
+        private static void AddReplaceSource(Dictionary<int, (IEnumerator enumerator, string? propertyName)?> rs, int columnIndex, IEnumerator enumerator, string? propertyName)
         {
-            ReplaceSource = [];
-        }
-
-        private bool IsReplaceSourceEmpty()
-        {
-            return ReplaceSource.Keys.Count == 0;
-        }
-
-        private void AddReplaceSource(int columnIndex, IEnumerator enumerator, string? propertyName)
-        {
-            if (!ReplaceSource.ContainsKey(columnIndex))
+            if (!rs.ContainsKey(columnIndex))
             {
-                ReplaceSource.Add(columnIndex, (enumerator, propertyName));
+                rs.Add(columnIndex, (enumerator, propertyName));
             }
         }
 
-        private IEnumerable<IEnumerable<(int columnIndex, string replaceStr)>> GetRowReplaceValues()
+        private static bool IsReplaceSourceEmpty(Dictionary<int, (IEnumerator enumerator, string? propertyName)?> rs)
         {
-            var columnIndexs = ReplaceSource.Keys;
+            return rs.Keys.Count == 0;
+        }
+
+        private static IEnumerable<IEnumerable<(int columnIndex, string replaceStr)>> GetRowReplaceValues(Dictionary<int, (IEnumerator enumerator, string? propertyName)?> rs)
+        {
+            var columnIndexs = rs.Keys;
             var emptyIndexs = new List<int>();
             while (emptyIndexs.Count < columnIndexs.Count)
             {
@@ -204,7 +229,7 @@ namespace TemplateFiller.Utils
                 foreach (var columnIndex in columnIndexs)
                 {
                     string replaceStr = string.Empty;
-                    var source = ReplaceSource[columnIndex];
+                    var source = rs[columnIndex];
                     if (source.HasValue)
                     {
                         var enumerator = source.Value.enumerator;
@@ -223,7 +248,7 @@ namespace TemplateFiller.Utils
                         else
                         {
                             emptyIndexs.Add(columnIndex);
-                            ReplaceSource[columnIndex] = null;
+                            rs[columnIndex] = null;
                         }
                     }
 
@@ -239,7 +264,7 @@ namespace TemplateFiller.Utils
 
         }
 
-        private void FillCurrentCell(XWPFTableCell currentCell, string replaceStr)
+        private static void FillCurrentCell(XWPFTableCell currentCell, string replaceStr)
         {
             foreach (var p in currentCell.Paragraphs)
             {
@@ -281,21 +306,6 @@ namespace TemplateFiller.Utils
 
                 break; // 一个单元格内如果有多个占位符，只处理匹配的第一个 
             }
-        }
-
-        /// <summary>
-        /// 更换目标
-        /// </summary>
-        /// <param name="table"></param>
-        public void ChangeTarget(XWPFTable table)
-        {
-            _table = table;
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            _table = null;
         }
     }
 }

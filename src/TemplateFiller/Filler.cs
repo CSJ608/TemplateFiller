@@ -32,7 +32,7 @@ namespace TemplateFiller
             => FillTemplateImplementation(template, output, dataSource);
 
         /// <summary>
-        /// 填充模板的实现类
+        /// 填充模板的实现
         /// </summary>
         /// <param name="template">模板流</param>
         /// <param name="output">输出流</param>
@@ -56,7 +56,7 @@ namespace TemplateFiller
         }
 
         /// <summary>
-        /// 批量填充模板的实现类
+        /// 批量填充模板的实现
         /// </summary>
         /// <param name="template">模板流</param>
         /// <param name="bags">作业包</param>
