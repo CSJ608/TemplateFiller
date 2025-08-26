@@ -1,4 +1,5 @@
-﻿using NPOI.OpenXmlFormats.Wordprocessing;
+﻿using NPOI.OpenXmlFormats.Dml.WordProcessing;
+using NPOI.OpenXmlFormats.Wordprocessing;
 using NPOI.SS.UserModel;
 using NPOI.XWPF.UserModel;
 using System;
@@ -97,5 +98,28 @@ namespace TemplateFiller.Extensions
 
             return false;
         }
+
+        //public static string? GetRelationshipIdFromDrawing(CT_Drawing drawing)
+        //{
+        //    // 从CT_Drawing中提取关系ID
+        //    foreach (var element in drawing.Elements())
+        //    {
+        //        if (element is CT_Inline inline)
+        //        {
+        //            if (inline.graphic != null &&
+        //                inline.graphic.graphicData != null)
+        //            {
+        //                foreach (var graphicDataElement in inline.graphic.graphicData.Elements())
+        //                {
+        //                    if (graphicDataElement is CT_Picture picture)
+        //                    {
+        //                        return picture.blipFill?.blip?.embed?.Value;
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //    return null;
+        //}
     }
 }

@@ -42,7 +42,14 @@ namespace TemplateFiller
 
             private static void ProcessDocument(XWPFDocument doc, ISource source, CancellationToken cancellationToken = default)
             {
-                using var filler = new WordValueFiller(null);                
+                using var filler = new WordValueFiller(null);
+
+                // 处理图片
+                using var imageFiller = new WordImageFiller(doc);
+                if (imageFiller.Check())
+                {
+                    imageFiller.Fill(source);
+                }
 
                 // 处理文档
                 ProcessParagraph(source, filler, doc.Paragraphs, cancellationToken);
@@ -60,13 +67,6 @@ namespace TemplateFiller
                 {
                     ProcessParagraph(source, filler, footer.Paragraphs, cancellationToken);
                     ProcessTables(source, filler, footer.Tables, false, cancellationToken);
-                }
-
-                // 处理图片
-                using var imageFiller = new WordImageFiller(doc);
-                if (imageFiller.Check())
-                {
-                    imageFiller.Fill(source);
                 }
             }
 

@@ -1,6 +1,8 @@
 ﻿using SkiaSharp;
 using ZXing;
 using ZXing.Common;
+using ZXing.Rendering;
+using ZXing.SkiaSharp.Rendering;
 
 namespace ConsoleApp
 {
@@ -11,6 +13,7 @@ namespace ConsoleApp
             var barcodeWriter = new BarcodeWriter<SKBitmap>
             {
                 Format = format,
+                Renderer = new SKBitmapRenderer(),
                 Options = new EncodingOptions
                 {
                     Width = width,
@@ -26,7 +29,7 @@ namespace ConsoleApp
             data.SaveTo(outputStream);
         }
 
-        public static MemoryStream GetBarcode(string content, BarcodeFormat format, int width = 300, int height = 150)
+        public static MemoryStream GetBarcode(string content, BarcodeFormat format, int width = 300, int height = 300)
         {
             var ms = new MemoryStream();
             GenerateBarcodeToStream(content, format, ms, width, height);
