@@ -52,7 +52,7 @@ namespace TemplateFiller.Utils
                 return false;
             }
 
-            return document.AllPictures.Count > 0;
+            return document.AllPictures.Count + document.AllPackagePictures.Count > 0;
         }
 
         private static void ProcessDocument(XWPFDocument? document, ISource source, CancellationToken cancellationToken = default)
