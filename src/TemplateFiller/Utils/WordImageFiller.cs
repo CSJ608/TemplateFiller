@@ -1,5 +1,8 @@
 ﻿using FileSignatures;
+using NPOI.OpenXmlFormats.Dml.WordProcessing;
+using NPOI.OpenXmlFormats.Wordprocessing;
 using NPOI.SS.UserModel;
+using NPOI.Util;
 using NPOI.WP.UserModel;
 using NPOI.XWPF.UserModel;
 using System;
@@ -115,141 +118,155 @@ namespace TemplateFiller.Utils
         {
             foreach (var run in runs)
             {
-                FindDrawingAndFill(source, run);
+                FindDrawingAndFill(document, source, run);
             }
         }
 
-        private static void FindDrawingAndFill(ISource source, XWPFRun run)
+        private static void FindDrawingAndFill(XWPFDocument document, ISource source, XWPFRun run)
         {
-            Stream? imgStream = null;
-            string matchedKey = string.Empty;
-            int? width = null;
-            int? height = null;
-            string imgType = string.Empty;
-
             var ctr = run.GetCTR();
+            var info = GetPicturePlaceholderInfo(ctr);
 
-            TryRemoveDrawing(source, ref imgStream, ref matchedKey, ref width, ref height, ref imgType, ctr);            
-
-            if (imgStream == null || width == null || height == null)
+            if (info == null)
             {
                 return;
             }
 
-            var pictureType = imgType.ToLower() switch
-            {
-                "emf" => PictureType.EMF,
-                "wmf" => PictureType.WMF,
-                "pict" => PictureType.PICT,
-                "jpeg" => PictureType.JPEG,
-                "png" => PictureType.PNG,
-                "dib" => PictureType.DIB,
-                "gif" => PictureType.GIF,
-                "tiff" => PictureType.TIFF,
-                "eps" => PictureType.EPS,
-                "bmp" => PictureType.BMP,
-                "wpg" => PictureType.WPG,
-                "svg" => PictureType.SVG,
-
-                _ => throw new InvalidOperationException()
-            };
-
-            imgStream.Seek(0, SeekOrigin.Begin);
-            run.AddPicture(imgStream, (int)pictureType, $"{matchedKey}.{imgType}", width.Value, height.Value);
-        }
-
-        private static bool TryRemoveDrawing(ISource source, ref Stream? imgStream, ref string matchedKey, ref int? width, ref int? height, ref string imgType, NPOI.OpenXmlFormats.Wordprocessing.CT_R ctr)
-        {
-            var draws = ctr.GetDrawingList();
-            if (draws.Count == 0)
-            {
-                return false;
-            }
-
-            var draw = draws[0]; // 在一个run里，一般只有一个drawing
-            bool needRemove = false;
-            foreach (var a in draw.anchor)
-            {
-                var picName = a.docPr.name;
-                if (!picName.IsMatch(PlaceholderConsts.ValuePlaceholder, out var _, out var _))
-                {
-                    continue;
-                }
-
-                needRemove = true;
-                var match = Regex.Match(picName, PlaceholderConsts.ValuePlaceholder); // 与多个占位符匹配时，只处理第一个
-                var key = match.Groups[1].Value;
-                var imgData = source[key];
-                if (imgData is not Stream s)
-                {
-                    continue;
-                }
-
-                imgStream = s;
-                matchedKey = key;
-                width = (int)a.extent.cx;
-                height = (int)a.extent.cy;
-
-                imgType = GetImgType(source, imgStream, key);
-            }
-
-            foreach (var item in draw.inline)
-            {
-                var picName = item.docPr.name;
-                if (!picName.IsMatch(PlaceholderConsts.ValuePlaceholder, out var _, out var _))
-                {
-                    continue;
-                }
-
-                needRemove = true;
-                var match = Regex.Match(picName, PlaceholderConsts.ValuePlaceholder); // 与多个占位符匹配时，只处理第一个
-                var key = match.Groups[1].Value;
-                var imgData = source[key];
-                if (imgData is not Stream s)
-                {
-                    continue;
-                }
-
-                imgStream = s;
-                matchedKey = key;
-                width = (int)item.extent.cx;
-                height = (int)item.extent.cy;
-
-                imgType = GetImgType(source, imgStream, key);
-            }
-
-            if (needRemove)
+            for (int i = 0; i < ctr.GetDrawingList().Count; i++)
             {
                 ctr.RemoveDrawing(0);
             }
 
-            return true;
+            var newDrawing = ctr.AddNewDrawing();
+            var newInline = newDrawing.AddNewInline();
+            if (info.IsInline && info.Inline != null)
+            {
+                newInline.extent = new CT_PositiveSize2D()
+                {
+                    cx = info.Inline.extent.cx,
+                    cy = info.Inline.extent.cy,
+                };
+
+                newInline.effectExtent = new CT_EffectExtent()
+                {
+                    l = info.Inline.effectExtent.l,
+                    t = info.Inline.effectExtent.t,
+                    r = info.Inline.effectExtent.r,
+                    b = info.Inline.effectExtent.b
+                };
+
+                var ext = newInline.AddNewExtent();
+                ext.cx = info.Width;
+                ext.cy = info.Height;
+                var pr = newInline.AddNewDocPr();
+                pr.add
+            }
+
+            //var imgData = source[info.MatchedKey];
+            //if (imgData is not Stream s)
+            //{
+            //    return; //系统
+            //}
+
+            //var imgStream = s;
+            //string imgType = string.Empty;
+            //var inspector = new FileFormatInspector();
+            //var format = inspector.DetermineFileFormat(imgStream);
+            //if (format == null)
+            //{
+            //    imgType = "png";
+            //}
+            //else
+            //{
+            //    imgType = format.Extension;
+            //}
+
+            //var pictureType = imgType.ToLower() switch
+            //{
+            //    "emf" => PictureType.EMF,
+            //    "wmf" => PictureType.WMF,
+            //    "pict" => PictureType.PICT,
+            //    "jpeg" => PictureType.JPEG,
+            //    "png" => PictureType.PNG,
+            //    "dib" => PictureType.DIB,
+            //    "gif" => PictureType.GIF,
+            //    "tiff" => PictureType.TIFF,
+            //    "eps" => PictureType.EPS,
+            //    "bmp" => PictureType.BMP,
+            //    "wpg" => PictureType.WPG,
+            //    "svg" => PictureType.SVG,
+
+            //    _ => throw new InvalidOperationException("Not support")
+            //};
+
+            //imgStream.Seek(0, SeekOrigin.Begin);
+            //run.AddPicture(imgStream, (int)pictureType, $"{matchedKey}.{imgType}", width.Value, height.Value);
         }
 
-        private static string GetImgType(ISource source, Stream imgStream, string key)
+        private class PicturePlaceholderInfo
         {
-            string imgType;
-            if (source is Source s1)
+            public bool IsInline { get; set; }
+            public string MatchedKey { get; set; } = string.Empty;
+            public int Width { get; set; }
+            public int Height { get; set; }
+            public CT_Anchor? Anchor { get; set; }
+            public CT_Inline? Inline { get; set; }
+        }
+
+        private static PicturePlaceholderInfo? GetPicturePlaceholderInfo(CT_R ctr)
+        {
+            var draws = ctr.GetDrawingList();
+            if (draws.Count == 0)
             {
-                imgType = s1.GetNestedAttributes(key)
-                    ?.OfType<ImgFillAttribute>()
-                    .FirstOrDefault()?.PictureType ?? string.Empty;
+                return null;
             }
-            else
+
+            foreach (var draw in draws)
             {
-                var inspector = new FileFormatInspector();
-                var format = inspector.DetermineFileFormat(imgStream);
-                if (format == null)
+                foreach (var item in draw.anchor)
                 {
-                    imgType = "png";
+                    var picName = item.docPr.name;
+                    if (!picName.IsMatch(PlaceholderConsts.ValuePlaceholder, out var _, out var _))
+                    {
+                        continue;
+                    }
+
+                    var match = Regex.Match(picName, PlaceholderConsts.ValuePlaceholder); // 与多个占位符匹配时，只处理第一个
+                    var key = match.Groups[1].Value;
+
+                    return new PicturePlaceholderInfo()
+                    {
+                        IsInline = false,
+                        MatchedKey = key,
+                        Width = (int)item.extent.cx,
+                        Height = (int)item.extent.cy,
+                        Anchor = item,
+                    };
                 }
-                else
+
+                foreach (var item in draw.inline)
                 {
-                    imgType = format.Extension;
+                    var picName = item.docPr.name;
+                    if (!picName.IsMatch(PlaceholderConsts.ValuePlaceholder, out var _, out var _))
+                    {
+                        continue;
+                    }
+
+                    var match = Regex.Match(picName, PlaceholderConsts.ValuePlaceholder); // 与多个占位符匹配时，只处理第一个
+                    var key = match.Groups[1].Value;
+
+                    return new PicturePlaceholderInfo()
+                    {
+                        IsInline = true,
+                        MatchedKey = key,
+                        Width = (int)item.extent.cx,
+                        Height = (int)item.extent.cy,
+                        Inline = item,
+                    };
                 }
             }
 
-            return imgType;
-        }
+            return null;
+        }        
     }
 }
