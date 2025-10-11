@@ -1,19 +1,15 @@
 ﻿using FileSignatures;
+using NPOI.OpenXmlFormats.Dml;
 using NPOI.OpenXmlFormats.Dml.WordProcessing;
 using NPOI.OpenXmlFormats.Wordprocessing;
-using NPOI.SS.UserModel;
 using NPOI.Util;
-using NPOI.WP.UserModel;
 using NPOI.XWPF.UserModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Xml.Linq;
 using TemplateFiller.Abstractions;
 using TemplateFiller.Consts;
 using TemplateFiller.Extensions;
@@ -125,82 +121,214 @@ namespace TemplateFiller.Utils
         private static void FindDrawingAndFill(XWPFDocument document, ISource source, XWPFRun run)
         {
             var ctr = run.GetCTR();
-            var info = GetPicturePlaceholderInfo(ctr);
+            var infos = GetPicturePlaceholders(ctr);
 
-            if (info == null)
+            if (infos.Count == 0)
             {
                 return;
             }
 
-            for (int i = 0; i < ctr.GetDrawingList().Count; i++)
+            foreach (var info in infos)
             {
-                ctr.RemoveDrawing(0);
+                var imgData = source[info.MatchedKey];
+                if (imgData is not Stream imgStream)
+                {
+                    continue;
+                }
+
+                BuildPictureTypeAndName(info, imgStream, out var pictureType, out var fileName);
+
+                var parent = run.Parent;
+                var picData = BuildPicutreData(document, imgStream, pictureType, parent);
+
+                if (info.IsInline && info.Inline != null)
+                {
+                    ReplaceInlinePictureData(run, info, fileName, parent, picData);
+                }
+
+                if(!info.IsInline && info.Anchor != null)
+                {
+                    ReplaceAnchorPictureData(run, info, fileName, parent, picData);
+                }
+            }
+        }
+
+        private static void ReplaceInlinePictureData(
+            XWPFRun run, 
+            PicturePlaceholderInfo info, string fileName, IRunBody parent, XWPFPictureData picData)
+        {
+            info.Inline!.docPr.descr = fileName;
+            info.Inline.graphic.graphicData = new CT_GraphicalObjectData();
+            info.Inline.graphic.graphicData.uri = "http://schemas.openxmlformats.org/drawingml/2006/picture";
+
+            var id = info.Inline.docPr.id;
+
+            // Grab the picture object
+            var pic = new NPOI.OpenXmlFormats.Dml.Picture.CT_Picture();
+
+            // Set it up
+            var nvPicPr = pic.AddNewNvPicPr();
+
+            var cNvPr = nvPicPr.AddNewCNvPr();
+            /* use "0" for the id. See ECM-576, 20.2.2.3 */
+            cNvPr.id = 0;
+            /* This name is not visible in Word 2010 anywhere */
+            cNvPr.name = $"Picture {id}";
+            cNvPr.descr = fileName;
+
+            var cNvPicPr = nvPicPr.AddNewCNvPicPr();
+            cNvPicPr.AddNewPicLocks().noChangeAspect = true;
+
+            var blipFill = pic.AddNewBlipFill();
+            var blip = blipFill.AddNewBlip();
+            blip.embed = parent.Part.GetRelationId(picData);
+            blipFill.AddNewStretch().AddNewFillRect();
+
+            var spPr = pic.AddNewSpPr();
+            var xfrm = spPr.AddNewXfrm();
+
+            var off = xfrm.AddNewOff();
+            off.x = (0);
+            off.y = (0);
+
+            var ext = xfrm.AddNewExt();
+            ext.cx = info.Width;
+            ext.cy = info.Height;
+
+            var prstGeom = spPr.AddNewPrstGeom();
+            prstGeom.prst = (ST_ShapeType.rect);
+            prstGeom.AddNewAvLst();
+
+            using (var ms = RecyclableMemory.GetStream())
+            {
+                var sw = new StreamWriter(ms);
+                pic.Write(sw, "pic:pic");
+                sw.Flush();
+                ms.Position = 0;
+                var sr = new StreamReader(ms);
+                var picXml = sr.ReadToEnd();
+                info.Inline.graphic.graphicData.AddPicElement(picXml);
+            }
+            // Finish up
+            var xwpfPicture = new XWPFPicture(pic, run);
+            var pictures = run.GetEmbeddedPictures();
+            pictures.Add(xwpfPicture);
+        }
+
+        private static void ReplaceAnchorPictureData(
+            XWPFRun run,
+            PicturePlaceholderInfo info, string fileName, IRunBody parent, XWPFPictureData picData)
+        {
+            info.Anchor!.docPr.descr = fileName;
+            info.Anchor.graphic.graphicData = new CT_GraphicalObjectData();
+            info.Anchor.graphic.graphicData.uri = "http://schemas.openxmlformats.org/drawingml/2006/picture";
+
+            var id = info.Anchor.docPr.id;
+
+            // Grab the picture object
+            var pic = new NPOI.OpenXmlFormats.Dml.Picture.CT_Picture();
+
+            // Set it up
+            var nvPicPr = pic.AddNewNvPicPr();
+
+            var cNvPr = nvPicPr.AddNewCNvPr();
+            /* use "0" for the id. See ECM-576, 20.2.2.3 */
+            cNvPr.id = 0;
+            /* This name is not visible in Word 2010 anywhere */
+            cNvPr.name = $"Picture {id}";
+            cNvPr.descr = fileName;
+
+            var cNvPicPr = nvPicPr.AddNewCNvPicPr();
+            cNvPicPr.AddNewPicLocks().noChangeAspect = true;
+
+            var blipFill = pic.AddNewBlipFill();
+            var blip = blipFill.AddNewBlip();
+            blip.embed = parent.Part.GetRelationId(picData);
+            blipFill.AddNewStretch().AddNewFillRect();
+
+            var spPr = pic.AddNewSpPr();
+            var xfrm = spPr.AddNewXfrm();
+
+            var off = xfrm.AddNewOff();
+            off.x = (0);
+            off.y = (0);
+
+            var ext = xfrm.AddNewExt();
+            ext.cx = info.Width;
+            ext.cy = info.Height;
+
+            var prstGeom = spPr.AddNewPrstGeom();
+            prstGeom.prst = (ST_ShapeType.rect);
+            prstGeom.AddNewAvLst();
+
+            using (var ms = RecyclableMemory.GetStream())
+            {
+                var sw = new StreamWriter(ms);
+                pic.Write(sw, "pic:pic");
+                sw.Flush();
+                ms.Position = 0;
+                var sr = new StreamReader(ms);
+                var picXml = sr.ReadToEnd();
+                info.Anchor.graphic.graphicData.AddPicElement(picXml);
+            }
+        }
+
+        private static XWPFPictureData BuildPicutreData(XWPFDocument document, Stream imgStream, PictureType pictureType, IRunBody parent)
+        {
+            String relationId;
+            XWPFPictureData picData;
+            if (parent.Part is XWPFHeaderFooter headerFooter)
+            {
+                relationId = headerFooter.AddPictureData(imgStream, (int)pictureType);
+                picData = (XWPFPictureData)headerFooter.GetRelationById(relationId);
+            }
+            else if (parent.Part is XWPFComments comments)
+            {
+                relationId = comments.AddPictureData(imgStream, (int)pictureType);
+                picData = (XWPFPictureData)comments.GetRelationById(relationId);
+            }
+            else
+            {
+                relationId = document.AddPictureData(imgStream, (int)pictureType);
+                picData = (XWPFPictureData)document.GetRelationById(relationId);
             }
 
-            var newDrawing = ctr.AddNewDrawing();
-            var newInline = newDrawing.AddNewInline();
-            if (info.IsInline && info.Inline != null)
+            return picData;
+        }
+
+        private static void BuildPictureTypeAndName(PicturePlaceholderInfo info, Stream imgStream, out PictureType pictureType, out string fileName)
+        {
+            string imgType;
+            var inspector = new FileFormatInspector();
+            var format = inspector.DetermineFileFormat(imgStream);
+            if (format == null)
             {
-                newInline.extent = new CT_PositiveSize2D()
-                {
-                    cx = info.Inline.extent.cx,
-                    cy = info.Inline.extent.cy,
-                };
-
-                newInline.effectExtent = new CT_EffectExtent()
-                {
-                    l = info.Inline.effectExtent.l,
-                    t = info.Inline.effectExtent.t,
-                    r = info.Inline.effectExtent.r,
-                    b = info.Inline.effectExtent.b
-                };
-
-                var ext = newInline.AddNewExtent();
-                ext.cx = info.Width;
-                ext.cy = info.Height;
-                var pr = newInline.AddNewDocPr();
-                pr.add
+                imgType = "png";
+            }
+            else
+            {
+                imgType = format.Extension;
             }
 
-            //var imgData = source[info.MatchedKey];
-            //if (imgData is not Stream s)
-            //{
-            //    return; //系统
-            //}
+            pictureType = imgType.ToLower() switch
+            {
+                "emf" => PictureType.EMF,
+                "wmf" => PictureType.WMF,
+                "pict" => PictureType.PICT,
+                "jpeg" => PictureType.JPEG,
+                "png" => PictureType.PNG,
+                "dib" => PictureType.DIB,
+                "gif" => PictureType.GIF,
+                "tiff" => PictureType.TIFF,
+                "eps" => PictureType.EPS,
+                "bmp" => PictureType.BMP,
+                "wpg" => PictureType.WPG,
+                "svg" => PictureType.SVG,
 
-            //var imgStream = s;
-            //string imgType = string.Empty;
-            //var inspector = new FileFormatInspector();
-            //var format = inspector.DetermineFileFormat(imgStream);
-            //if (format == null)
-            //{
-            //    imgType = "png";
-            //}
-            //else
-            //{
-            //    imgType = format.Extension;
-            //}
-
-            //var pictureType = imgType.ToLower() switch
-            //{
-            //    "emf" => PictureType.EMF,
-            //    "wmf" => PictureType.WMF,
-            //    "pict" => PictureType.PICT,
-            //    "jpeg" => PictureType.JPEG,
-            //    "png" => PictureType.PNG,
-            //    "dib" => PictureType.DIB,
-            //    "gif" => PictureType.GIF,
-            //    "tiff" => PictureType.TIFF,
-            //    "eps" => PictureType.EPS,
-            //    "bmp" => PictureType.BMP,
-            //    "wpg" => PictureType.WPG,
-            //    "svg" => PictureType.SVG,
-
-            //    _ => throw new InvalidOperationException("Not support")
-            //};
-
-            //imgStream.Seek(0, SeekOrigin.Begin);
-            //run.AddPicture(imgStream, (int)pictureType, $"{matchedKey}.{imgType}", width.Value, height.Value);
+                _ => throw new InvalidOperationException("Not support")
+            };
+            imgStream.Seek(0, SeekOrigin.Begin);
+            fileName = $"{info.MatchedKey}.{imgType}";
         }
 
         private class PicturePlaceholderInfo
@@ -209,16 +337,19 @@ namespace TemplateFiller.Utils
             public string MatchedKey { get; set; } = string.Empty;
             public int Width { get; set; }
             public int Height { get; set; }
+            public CT_Drawing CT_Drawing { get; set; } = new CT_Drawing();
             public CT_Anchor? Anchor { get; set; }
             public CT_Inline? Inline { get; set; }
         }
 
-        private static PicturePlaceholderInfo? GetPicturePlaceholderInfo(CT_R ctr)
+        private static List<PicturePlaceholderInfo> GetPicturePlaceholders(CT_R ctr)
         {
+            var result = new List<PicturePlaceholderInfo>();
+
             var draws = ctr.GetDrawingList();
             if (draws.Count == 0)
             {
-                return null;
+                return result;
             }
 
             foreach (var draw in draws)
@@ -234,14 +365,15 @@ namespace TemplateFiller.Utils
                     var match = Regex.Match(picName, PlaceholderConsts.ValuePlaceholder); // 与多个占位符匹配时，只处理第一个
                     var key = match.Groups[1].Value;
 
-                    return new PicturePlaceholderInfo()
+                    result.Add(new PicturePlaceholderInfo()
                     {
                         IsInline = false,
                         MatchedKey = key,
                         Width = (int)item.extent.cx,
                         Height = (int)item.extent.cy,
                         Anchor = item,
-                    };
+                        CT_Drawing = draw,
+                    });
                 }
 
                 foreach (var item in draw.inline)
@@ -255,18 +387,19 @@ namespace TemplateFiller.Utils
                     var match = Regex.Match(picName, PlaceholderConsts.ValuePlaceholder); // 与多个占位符匹配时，只处理第一个
                     var key = match.Groups[1].Value;
 
-                    return new PicturePlaceholderInfo()
+                    result.Add(new PicturePlaceholderInfo()
                     {
                         IsInline = true,
                         MatchedKey = key,
                         Width = (int)item.extent.cx,
                         Height = (int)item.extent.cy,
                         Inline = item,
-                    };
+                        CT_Drawing = draw,
+                    });
                 }
             }
 
-            return null;
+            return result;
         }        
     }
 }
