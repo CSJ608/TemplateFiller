@@ -71,7 +71,7 @@ namespace TemplateFiller.Utils
 
             return false;
         }
-        
+
         private static void FillArrayData(XWPFTable? table, ISource source, Dictionary<int, (IEnumerator enumerator, string? propertyName)?> rs, CancellationToken cancellationToken = default)
         {
             if (table == null)

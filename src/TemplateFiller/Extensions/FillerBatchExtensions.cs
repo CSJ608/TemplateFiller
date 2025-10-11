@@ -135,7 +135,7 @@ namespace TemplateFiller.Extensions
             }
         }
 
-        private static Task WithFileBagAsync(IEnumerable<FileBag> fileBags, Func<IEnumerable<Bag>,Task> func)
+        private static Task WithFileBagAsync(IEnumerable<FileBag> fileBags, Func<IEnumerable<Bag>, Task> func)
         {
             var bags = ConvertToBags(fileBags).ToList();
             try

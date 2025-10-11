@@ -131,7 +131,7 @@ namespace TemplateFiller
         {
             var prop = obj.GetType().GetProperty(propertyName);
             return prop?.GetValue(obj);
-        }        
+        }
 
         private static SourceSection CreateSection(Stack<SourceSection> stack, string key, string path, object? value, Source root)
         {

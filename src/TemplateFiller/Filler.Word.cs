@@ -1,5 +1,4 @@
 ﻿using NPOI.Util;
-using NPOI.WP.UserModel;
 using NPOI.XWPF.UserModel;
 using System.Collections.Generic;
 using System.IO;
@@ -42,31 +41,44 @@ namespace TemplateFiller
 
             private static void ProcessDocument(XWPFDocument doc, ISource source, CancellationToken cancellationToken = default)
             {
+                // 处理图片
+                ProcessImage(doc, source, cancellationToken);
+
+                // 处理文本
+                ProcessText(doc, source, cancellationToken);
+            }
+
+            private static void ProcessText(XWPFDocument doc, ISource source, CancellationToken cancellationToken)
+            {
                 using var filler = new WordValueFiller(null);
 
-                // 处理图片
-                using var imageFiller = new WordImageFiller(doc);
-                if (imageFiller.Check())
-                {
-                    imageFiller.Fill(source);
-                }
-
-                // 处理文档
+                // 处理段落
                 ProcessParagraph(source, filler, doc.Paragraphs, cancellationToken);
 
                 // 处理表格
                 ProcessTables(source, filler, doc.Tables, true, cancellationToken);
 
-                // 处理页眉页脚
+                // 处理页眉
                 foreach (var header in doc.HeaderList)
                 {
                     ProcessParagraph(source, filler, header.Paragraphs, cancellationToken);
                     ProcessTables(source, filler, header.Tables, false, cancellationToken);
                 }
+
+                // 处理页脚
                 foreach (var footer in doc.FooterList)
                 {
                     ProcessParagraph(source, filler, footer.Paragraphs, cancellationToken);
                     ProcessTables(source, filler, footer.Tables, false, cancellationToken);
+                }
+            }
+
+            private static void ProcessImage(XWPFDocument doc, ISource source, CancellationToken cancellationToken)
+            {
+                using var filler = new WordImageFiller(doc, cancellationToken);
+                if (filler.Check())
+                {
+                    filler.Fill(source);
                 }
             }
 

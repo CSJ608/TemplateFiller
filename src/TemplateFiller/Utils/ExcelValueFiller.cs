@@ -51,7 +51,8 @@ namespace TemplateFiller.Utils
             return Regex.IsMatch(cell.GetStringValue(), PlaceholderConsts.ValuePlaceholder);
         }
 
-        private static void FillValueData(ICell? cell, ISource source) {
+        private static void FillValueData(ICell? cell, ISource source)
+        {
             if (cell == null)
             {
                 return;

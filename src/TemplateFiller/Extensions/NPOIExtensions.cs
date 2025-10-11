@@ -1,5 +1,4 @@
-﻿using NPOI.OpenXmlFormats.Dml.WordProcessing;
-using NPOI.OpenXmlFormats.Wordprocessing;
+﻿using NPOI.OpenXmlFormats.Wordprocessing;
 using NPOI.SS.UserModel;
 using NPOI.XWPF.UserModel;
 using System;

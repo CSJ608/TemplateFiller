@@ -46,7 +46,7 @@ namespace TemplateFiller.Utils
 
         private static bool CheckHasImage(XWPFDocument? document)
         {
-            if(document == null)
+            if (document == null)
             {
                 return false;
             }
@@ -146,7 +146,7 @@ namespace TemplateFiller.Utils
                     ReplaceInlinePictureData(run, info, fileName, parent, picData);
                 }
 
-                if(!info.IsInline && info.Anchor != null)
+                if (!info.IsInline && info.Anchor != null)
                 {
                     ReplaceAnchorPictureData(run, info, fileName, parent, picData);
                 }
@@ -154,7 +154,7 @@ namespace TemplateFiller.Utils
         }
 
         private static void ReplaceInlinePictureData(
-            XWPFRun run, 
+            XWPFRun run,
             PicturePlaceholderInfo info, string fileName, IRunBody parent, XWPFPictureData picData)
         {
             info.Inline!.docPr.descr = fileName;
@@ -400,6 +400,6 @@ namespace TemplateFiller.Utils
             }
 
             return result;
-        }        
+        }
     }
 }

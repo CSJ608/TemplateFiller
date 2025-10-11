@@ -14,7 +14,6 @@ namespace ConsoleApp
         public string PrintTime { get; set; } = string.Empty;
         public Person[] Persons { get; set; } = [];
         public int[] Counts { get; set; } = [];
-        [ImgFill()]
         public Stream Code { get; set; }
     }
 
