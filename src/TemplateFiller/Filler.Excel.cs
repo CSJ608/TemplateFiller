@@ -26,7 +26,7 @@ namespace TemplateFiller
                 using var source = new Source(dataSource);
                 using var workbook = LoadWorkbook(template);
                 ProcessWorkbook(workbook, source, cancellationToken);
-                workbook.Write(output);
+                workbook.Write(output, true);
             }
 
             protected override void FillTemplateImplementation(Stream template, IEnumerable<Bag> bags, CancellationToken cancellationToken = default)
